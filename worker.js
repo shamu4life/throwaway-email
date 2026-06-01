@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ALLOWED_DOMAINS = ['letsfuckingpiss.party', 'shitpost.email', 'megapenispoopenfarten.sex'];
-const INBOX_TTL       = 43200;           // 12 hours
+const INBOX_TTL       = 86400;           // 24 hours
 const REDIRECT_TTL    = 2592000;         // 30 days
 const MAX_MESSAGES    = 50;
 const MAX_EMAIL_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -482,7 +482,7 @@ const App = (() => {
         <em class="disc-chevron open" id="disc-chev">▾</em>
       </div>
       <div class="disc-body open" id="disc-body"><ul>
-        <li><strong>Temporary inboxes expire after 12 hours.</strong> All messages are permanently deleted.</li>
+        <li><strong>Temporary inboxes expire after 24 hours.</strong> All messages are permanently deleted.</li>
         <li><strong>Nothing is encrypted.</strong> Emails are stored as plain text in Cloudflare KV. Throwaway use only.</li>
         <li><strong>5 MB per email limit.</strong> Larger emails are rejected.</li>
         <li><strong>No recovery.</strong> Losing your browser session means losing inbox access permanently.</li>
