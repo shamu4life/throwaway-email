@@ -1,0 +1,19 @@
+name = "throwaway-email"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "KV"
+id      = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+[[routes]]
+pattern   = "letsfuckingpiss.party/*"
+zone_name = "letsfuckingpiss.party"
+
+[[routes]]
+pattern   = "shitpost.email/*"
+zone_name = "shitpost.email"
+
+[[send_email]]
+name = "THROWMAIL_EMAIL"
