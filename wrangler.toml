@@ -8,10 +8,6 @@ binding = "KV"
 id      = "39574b78356244e2a1db30eb487d2c78"
 
 [[routes]]
-pattern   = "letsfuckingpiss.party/*"
-zone_name = "letsfuckingpiss.party"
-
-[[routes]]
 pattern   = "shitpost.email/*"
 zone_name = "shitpost.email"
 
