@@ -33,6 +33,13 @@ Zero dependencies. Single file. Paste it into the Cloudflare dashboard and you'r
 - **Web UI** — fully functional SPA served from the same Worker. Dark/light theme, auto-refresh inbox, copy-to-clipboard, the works.
 - **No account required** — access is token-based and session-scoped. Close the tab and it's gone, which is kind of the point.
 
+## Caveats
+
+- **Nothing is encrypted.** Emails sit in Cloudflare KV as plain text. Use this for throwaway signups and OTP codes, not anything sensitive.
+- **Session-scoped access.** The token is kept in memory. Close the tab and you lose inbox access permanently — no recovery.
+- **5 MB per email.** Larger messages are rejected at the edge before they hit KV.
+- **No uptime guarantee.** This is a Cloudflare Worker. It'll probably be fine. Probably.
+
 ---
 
 ## Stack
@@ -45,33 +52,6 @@ Zero dependencies. Single file. Paste it into the Cloudflare dashboard and you'r
 | Dependencies | None |
 
 Everything lives in `worker.js`. No bundler, no build step, no `node_modules` folder silently judging you.
-
----
-
-## Configuration
-
-All tuneable constants are at the top of `worker.js`:
-
-```js
-const ALLOWED_DOMAINS  = ['shitpost.email', ...]; // domains shown in the UI
-const INBOX_TTL        = 86400;                    // default inbox TTL (seconds) — 24h
-const REDIRECT_TTL     = 2592000;                  // default redirect TTL — 30 days
-const MAX_MESSAGES     = 50;                       // max emails stored per inbox
-const MAX_EMAIL_BYTES  = 5 * 1024 * 1024;          // 5 MB per email hard limit
-```
-
-Users can override TTL at creation time within these bounds:
-- **Inbox**: 1–48 hours
-- **Redirect**: 1–6 months
-
----
-
-## Caveats
-
-- **Nothing is encrypted.** Emails sit in Cloudflare KV as plain text. Use this for throwaway signups and OTP codes, not anything sensitive.
-- **Session-scoped access.** The token is kept in memory. Close the tab and you lose inbox access permanently — no recovery.
-- **5 MB per email.** Larger messages are rejected at the edge before they hit KV.
-- **No uptime guarantee.** This is a Cloudflare Worker. It'll probably be fine. Probably.
 
 ---
 
