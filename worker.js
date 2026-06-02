@@ -508,12 +508,12 @@ const App = (() => {
         <em class="disc-chevron open" id="disc-chev" aria-hidden="true">▾</em>
       </button>
       <div class="disc-body open" id="disc-body"><ul>
-        <li><strong>Temporary inboxes expire after 24 hours.</strong> All messages are permanently deleted.</li>
+        <li><strong>Temporary inboxes expire after 1–48 hours</strong> (your choice). All messages are permanently deleted.</li>
+        <li><strong>Mail redirects expire after 1–6 months</strong> (your choice) with no notification.</li>
         <li><strong>Nothing is encrypted.</strong> Emails are stored as plain text in Cloudflare KV. Throwaway use only.</li>
         <li><strong>5 MB per email limit.</strong> Larger emails are rejected.</li>
         <li><strong>No recovery.</strong> Losing your browser session means losing inbox access permanently.</li>
         <li><strong>Do not use for anything sensitive</strong> — passwords, financial info, private communications.</li>
-        <li><strong>Redirects expire after 30 days</strong> with no notification.</li>
         <li>No uptime guarantees. Use at your own risk.</li>
       </ul></div>
     </div>\`;
@@ -534,7 +534,7 @@ const App = (() => {
     el('dbadge').textContent = INIT_DOMAIN;
     ren(\`
       <h1>Burner Inbox</h1>
-      <p class="sub">A throwaway address in seconds. 24-hour self-destructing inboxes or 30-day mail redirects — no account, no logging, no drama.</p>
+      <p class="sub">A throwaway address in seconds. Self-destructing inboxes (1–48 hours) or mail redirects (1–6 months) — no account, no logging, no drama.</p>
       <div class="card">
         <label for="u">Username</label>
         <div class="igroup">
@@ -554,7 +554,7 @@ const App = (() => {
           <option value="3600">1 hour</option>
           <option value="7200">2 hours</option>
           <option value="14400">4 hours</option>
-          <option value="21600">6 hours</option>
+          <option value="28800">8 hours</option>
           <option value="43200">12 hours</option>
           <option value="86400" selected>24 hours</option>
           <option value="172800">48 hours</option>
@@ -578,7 +578,7 @@ const App = (() => {
     if (lbl) lbl.textContent = inboxMode ? 'Keep inbox for' : 'Active for';
     const def  = inboxMode ? 86400 : 2592000;
     const opts = inboxMode
-      ? [[3600,'1 hour'],[7200,'2 hours'],[14400,'4 hours'],[21600,'6 hours'],[43200,'12 hours'],[86400,'24 hours'],[172800,'48 hours']]
+      ? [[3600,'1 hour'],[7200,'2 hours'],[14400,'4 hours'],[28800,'8 hours'],[43200,'12 hours'],[86400,'24 hours'],[172800,'48 hours']]
       : [[2592000,'1 month'],[5184000,'2 months'],[7776000,'3 months'],[15552000,'6 months']];
     sel.innerHTML = opts.map(function(o){ return '<option value="' + o[0] + '"' + (o[0] === def ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
   }
