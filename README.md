@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="logo.svg" alt="ShitPost.email" width="600">
+<img src=".github/logo.svg" alt="ShitPost.email" width="600">
 
 <br><br>
 
@@ -13,8 +13,6 @@
 ---
 
 Disposable email addresses built on Cloudflare Workers. Spin up a throwaway inbox or mail redirect in seconds — no account, no logs, no drama.
-
-Zero dependencies. Single file. Paste it into the Cloudflare dashboard and you're done.
 
 ---
 
