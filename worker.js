@@ -319,8 +319,8 @@ h1{font-size:1.6rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-.02em}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow)}
 label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.05em}
 .label-opt{font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--muted2);margin-left:.3rem}
-input,select{width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:.6rem .85rem;border-radius:8px;font-size:.9rem;outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit}
-input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(109,40,217,.15)}
+input,select{width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:.6rem .85rem;border-radius:8px;font-size:.9rem;outline:2px solid transparent;transition:border-color .15s,box-shadow .15s,outline-color .15s;font-family:inherit}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(109,40,217,.15);outline-color:var(--accent)}
 input::placeholder{color:var(--muted2)}
 select option{background:var(--s2);color:var(--text)}
 .igroup{display:flex;gap:.4rem;align-items:center;margin-bottom:1.1rem}
@@ -330,7 +330,9 @@ select option{background:var(--s2);color:var(--text)}
 .mb1{margin-bottom:1.1rem}
 .mode-hint{font-size:.78rem;color:var(--accent2);min-height:1.2em;margin-bottom:.9rem;font-weight:500;word-break:break-all}
 .disc{background:var(--disc-bg);border:1px solid var(--disc-border);border-radius:10px;padding:.85rem 1rem;margin-bottom:1.1rem}
-.disc-hd{display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;color:var(--disc-text);cursor:pointer;user-select:none}
+.disc-hd{display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;color:var(--disc-text);cursor:pointer;user-select:none;background:none;border:none;width:100%;text-align:left;padding:0;font-family:inherit}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .disc-body{font-size:.75rem;color:var(--muted);line-height:1.75;display:none;margin-top:.5rem}
 .disc-body.open{display:block}
 .disc-body ul{padding-left:1.1rem}
@@ -384,15 +386,16 @@ footer{border-top:1px solid var(--border);padding:.8rem 1.5rem;text-align:center
 </head>
 <body>
 <header>
-  <button class="logo" onclick="App.home()">📬 ThrowMail</button>
+  <button class="logo" onclick="App.home()" aria-label="ThrowMail — go to home">📬 ThrowMail</button>
   <span class="dbadge" id="dbadge">${currentDomain}</span>
   <div class="hspace"></div>
   <button class="theme-btn" id="theme-btn" onclick="App.toggleTheme()">
     <span id="theme-icon"></span><span id="theme-label"></span>
   </button>
 </header>
-<main id="app"></main>
-<footer>No account needed · Emails auto-delete after 12h · No logs · No fucks given</footer>
+<main id="app" tabindex="-1"></main>
+<div id="announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+<footer>No account needed · Emails auto-delete after 24h · No logs · No fucks given</footer>
 <script>
 const DOMAINS      = ${JSON.stringify(ALLOWED_DOMAINS)};
 const INIT_DOMAIN  = ${JSON.stringify(currentDomain)};
@@ -448,8 +451,17 @@ const App = (() => {
     navigator.clipboard.writeText(text).then(() => {
       const b = el(btnId); if (!b) return;
       const o = b.textContent; b.textContent = '✓ Copied';
+      announce('Copied to clipboard');
       setTimeout(() => { b.textContent = o; }, 1800);
+    }).catch(() => {
+      announce('Copy failed — please copy the address manually');
     });
+  }
+
+  function announce(msg) {
+    const a = el('announce'); if (!a) return;
+    a.textContent = '';
+    requestAnimationFrame(() => { a.textContent = msg; });
   }
 
   // ── Theme ────────────────────────────────────────────────────────────────
@@ -461,9 +473,10 @@ const App = (() => {
 
   function syncThemeBtn() {
     const dark = currentTheme() === 'dark';
-    const i = el('theme-icon'), l = el('theme-label');
+    const i = el('theme-icon'), l = el('theme-label'), b = el('theme-btn');
     if (i) i.textContent = dark ? '🌙' : '☀️';
     if (l) l.textContent = dark ? 'Dark' : 'Light';
+    if (b) b.setAttribute('aria-label', 'Switch to ' + (dark ? 'light' : 'dark') + ' theme');
   }
 
   function toggleTheme() {
@@ -477,10 +490,10 @@ const App = (() => {
 
   function discHTML() {
     return \`<div class="disc">
-      <div class="disc-hd" onclick="App._toggleDisc()">
+      <button class="disc-hd" type="button" onclick="App._toggleDisc()" aria-expanded="true" aria-controls="disc-body" id="disc-btn">
         ⚠️ Before you use this — read me
-        <em class="disc-chevron open" id="disc-chev">▾</em>
-      </div>
+        <em class="disc-chevron open" id="disc-chev" aria-hidden="true">▾</em>
+      </button>
       <div class="disc-body open" id="disc-body"><ul>
         <li><strong>Temporary inboxes expire after 24 hours.</strong> All messages are permanently deleted.</li>
         <li><strong>Nothing is encrypted.</strong> Emails are stored as plain text in Cloudflare KV. Throwaway use only.</li>
@@ -494,9 +507,10 @@ const App = (() => {
   }
 
   function _toggleDisc() {
-    const b = el('disc-body'), c = el('disc-chev');
+    const b = el('disc-body'), c = el('disc-chev'), btn = el('disc-btn');
     if (b) b.classList.toggle('open');
     if (c) c.classList.toggle('open');
+    if (btn) btn.setAttribute('aria-expanded', b && b.classList.contains('open') ? 'true' : 'false');
   }
 
   // ── Home ──────────────────────────────────────────────────────────────────
@@ -507,29 +521,30 @@ const App = (() => {
     el('dbadge').textContent = INIT_DOMAIN;
     ren(\`
       <h1>Throwaway Email</h1>
-      <p class="sub">Pick a username and domain. Leave the forwarding field empty for a 12-hour temporary inbox, or enter an address to forward all mail there instead.</p>
+      <p class="sub">Pick a username and domain. Leave the forwarding field empty for a 24-hour temporary inbox, or enter an address to forward all mail there instead.</p>
       <div class="card">
-        <label>Username</label>
+        <label for="u">Username</label>
         <div class="igroup">
           <input id="u" type="text" placeholder="cooluser42" oninput="App._onInput()"
-            autocomplete="off" autocapitalize="off" spellcheck="false"/>
-          <span class="at">@</span>
-          <select id="d" onchange="App._onInput()">
+            autocomplete="off" autocapitalize="off" spellcheck="false" aria-required="true"/>
+          <span class="at" aria-hidden="true">@</span>
+          <select id="d" onchange="App._onInput()" aria-label="Domain">
             \${DOMAINS.map(d => '<option value="' + d + '"' + (d === INIT_DOMAIN ? ' selected' : '') + '>' + d + '</option>').join('')}
           </select>
         </div>
-        <label>Forward to <span class="label-opt">optional — leave blank for a temp inbox</span></label>
+        <label for="target">Forward to <span class="label-opt">optional — leave blank for a temp inbox</span></label>
         <input id="target" type="email" class="mb1"
           placeholder="you@gmail.com — or leave empty for a temporary inbox"
           oninput="App._onInput()" autocomplete="email"/>
-        <div class="mode-hint" id="mode-hint"></div>
+        <div class="mode-hint" id="mode-hint" aria-live="polite"></div>
         \${discHTML()}
-        <div class="err" id="herr"></div>
+        <div class="err" id="herr" role="alert"></div>
         <button class="btn-primary" id="createbtn" onclick="App._create()">Create Address</button>
       </div>
     \`);
     _onInput();
     syncThemeBtn();
+    requestAnimationFrame(() => { el('u')?.focus(); });
   }
 
   function _onInput() {
@@ -564,7 +579,8 @@ const App = (() => {
     }
 
     btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span>Creating…';
+    btn.innerHTML = '<span class="spin" aria-hidden="true"></span>Creating…';
+    btn.setAttribute('aria-busy', 'true');
 
     const res = await api('/api/create', {
       method: 'POST',
@@ -573,6 +589,7 @@ const App = (() => {
 
     btn.disabled = false;
     btn.textContent = 'Create Address';
+    btn.removeAttribute('aria-busy');
 
     if (res.error) {
       errEl.textContent = res.error;
@@ -632,13 +649,13 @@ const App = (() => {
     ren(\`
       <div class="inbox-hd">
         <div>
-          <div class="inbox-title">📥 \${esc(_inbox.email)}</div>
+          <h2 class="inbox-title" id="inbox-heading" tabindex="-1">📥 \${esc(_inbox.email)}</h2>
           <div class="inbox-sub">Expires in \${fmtExpiry(_inbox.expires)}</div>
         </div>
         <div class="inbox-actions">
-          <div class="refresh-row"><span class="dot"></span><span id="cd">\${_countdown}s</span></div>
-          <button class="btn-sm" onclick="App._manualRefresh()">Refresh</button>
-          <button class="btn-danger" onclick="App._deleteInbox()">Delete</button>
+          <div class="refresh-row" aria-hidden="true"><span class="dot"></span><span id="cd">\${_countdown}s</span></div>
+          <button class="btn-sm" onclick="App._manualRefresh()" aria-label="Refresh inbox">Refresh</button>
+          <button class="btn-danger" onclick="App._deleteInbox()" aria-label="Delete inbox permanently">Delete</button>
         </div>
       </div>
       <div id="msglist">
@@ -646,6 +663,7 @@ const App = (() => {
       </div>
     \`);
     await _fetchMessages();
+    requestAnimationFrame(() => { el('inbox-heading')?.focus(); });
     _timer = setInterval(() => {
       _countdown--;
       const c = el('cd'); if (c) c.textContent = _countdown + 's';
@@ -664,13 +682,13 @@ const App = (() => {
       return;
     }
     listEl.innerHTML = '<div class="msg-list">' + _messages.map((m, i) => \`
-      <div class="msg-item\${i === 0 ? ' new' : ''}" onclick="App.openMsg(\${i})">
-        <div class="msg-row1">
+      <div class="msg-item\${i === 0 ? ' new' : ''}" onclick="App.openMsg(\${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();App.openMsg(\${i})}" tabindex="0" role="button" aria-label="\${esc(m.fromName || m.from)}: \${esc(m.subject)}, \${fmtDate(m.date)}">
+        <div class="msg-row1" aria-hidden="true">
           <div class="msg-from">\${esc(m.fromName || m.from)}</div>
           <div class="msg-time">\${fmtDate(m.date)}</div>
         </div>
-        <div class="msg-subject">\${esc(m.subject)}</div>
-        <div class="msg-preview">\${esc((m.text || '').replace(/\\s+/g, ' ').slice(0, 120))}</div>
+        <div class="msg-subject" aria-hidden="true">\${esc(m.subject)}</div>
+        <div class="msg-preview" aria-hidden="true">\${esc((m.text || '').replace(/\\s+/g, ' ').slice(0, 120))}</div>
       </div>\`).join('') + '</div>';
   }
 
@@ -699,21 +717,26 @@ const App = (() => {
     const m = _activeMsg, hasHtml = !!m.html;
     ren(\`
       <div class="flex gap mb"><button class="btn-sm" onclick="App.loadInbox()">← Inbox</button></div>
-      <div class="mv-subject">\${esc(m.subject)}</div>
+      <h2 class="mv-subject" id="msg-subject-hd" tabindex="-1">\${esc(m.subject)}</h2>
       <div class="mv-meta">
         <strong>From:</strong> \${esc(m.fromName ? m.fromName + ' <' + m.from + '>' : m.from)}<br>
         <strong>To:</strong> \${esc(_inbox.email)}<br>
         <strong>Date:</strong> \${new Date(m.date).toLocaleString()}
       </div>
-      \${hasHtml ? '<div class="view-toggle"><button class="btn-sm' + (!_htmlMode ? ' on' : '') + '" onclick="App._setHtml(false)">Plain text</button><button class="btn-sm' + (_htmlMode ? ' on' : '') + '" onclick="App._setHtml(true)">HTML</button></div>' : ''}
+      \${hasHtml ? '<div class="view-toggle" role="group" aria-label="Email view format"><button class="btn-sm' + (!_htmlMode ? ' on' : '') + '" onclick="App._setHtml(false)" aria-pressed="' + (!_htmlMode) + '">Plain text</button><button class="btn-sm' + (_htmlMode ? ' on' : '') + '" onclick="App._setHtml(true)" aria-pressed="' + _htmlMode + '">HTML</button></div>' : ''}
       <div id="msgbody">\${_bodyHTML(m)}</div>
     \`);
+    requestAnimationFrame(() => { el('msg-subject-hd')?.focus(); });
   }
 
   function _bodyHTML(m) {
     if (_htmlMode && m.html) {
+      const prev = el('htmlbody-frame');
+      if (prev?._blobUrl) URL.revokeObjectURL(prev._blobUrl);
       const u = URL.createObjectURL(new Blob([m.html], { type: 'text/html' }));
-      return '<iframe class="htmlbody" src="' + u + '" sandbox="allow-same-origin"></iframe>';
+      const frame = '<iframe id="htmlbody-frame" class="htmlbody" src="' + u + '" sandbox="allow-same-origin" title="Email HTML content"></iframe>';
+      requestAnimationFrame(() => { const f = el('htmlbody-frame'); if (f) f._blobUrl = u; });
+      return frame;
     }
     return '<div class="mv-body">' + esc(m.text || '(empty)') + '</div>';
   }
@@ -722,7 +745,9 @@ const App = (() => {
     _htmlMode = mode;
     const b = el('msgbody'); if (b) b.innerHTML = _bodyHTML(_activeMsg);
     document.querySelectorAll('.view-toggle .btn-sm').forEach((btn, i) => {
-      btn.classList.toggle('on', i === 0 ? !mode : mode);
+      const active = i === 0 ? !mode : mode;
+      btn.classList.toggle('on', active);
+      btn.setAttribute('aria-pressed', String(active));
     });
   }
 
