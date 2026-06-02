@@ -523,7 +523,7 @@ const App = (() => {
     el('dbadge').textContent = INIT_DOMAIN;
     ren(\`
       <h1>Burner Inbox</h1>
-      <p class="sub">A throwaway address in seconds. 24-hour self-destructing inboxes or permanent mail redirects — no account, no logging, no drama.</p>
+      <p class="sub">A throwaway address in seconds. 24-hour self-destructing inboxes or 30-day mail redirects — no account, no logging, no drama.</p>
       <div class="card">
         <label for="u">Username</label>
         <div class="igroup">
