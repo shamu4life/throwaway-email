@@ -75,6 +75,16 @@ Users can override TTL at creation time within these bounds:
 
 ---
 
+## Screenshots
+
+> Drop screenshots into `.github/screenshots/` and update these paths.
+
+| Home | Inbox | Message |
+|---|---|---|
+| ![Home](.github/screenshots/home.png) | ![Inbox](.github/screenshots/inbox.png) | ![Message](.github/screenshots/message.png) |
+
+---
+
 ## License
 
 MIT. Do whatever you want. We're not your parents.
