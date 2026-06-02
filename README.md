@@ -1,6 +1,18 @@
-# 💩 ShitPost.email
+<div align="center">
 
-Disposable email addresses built on Cloudflare Workers. Spin up a throwaway inbox or permanent-ish mail redirect in seconds — no account, no logs, no drama.
+<img src="logo.svg" alt="ShitPost.email" width="600">
+
+<br><br>
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-db2777.svg)](LICENSE)
+[![Cloudflare Workers](https://img.shields.io/badge/Deployed_on-Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
+[![Zero dependencies](https://img.shields.io/badge/dependencies-0-22c55e.svg)]()
+
+</div>
+
+---
+
+Disposable email addresses built on Cloudflare Workers. Spin up a throwaway inbox or mail redirect in seconds — no account, no logs, no drama.
 
 Zero dependencies. Single file. Paste it into the Cloudflare dashboard and you're done.
 
@@ -146,6 +158,16 @@ Permanently delete an inbox and all its messages.
 - **Session-scoped access.** The token is kept in memory. Close the tab and you lose inbox access permanently — no recovery.
 - **5 MB per email.** Larger messages are rejected at the edge before they hit KV.
 - **No uptime guarantee.** This is a Cloudflare Worker. It'll probably be fine. Probably.
+
+---
+
+## Screenshots
+
+> Drop screenshots into `.github/screenshots/` and update these paths.
+
+| Home | Inbox | Message |
+|---|---|---|
+| ![Home](.github/screenshots/home.png) | ![Inbox](.github/screenshots/inbox.png) | ![Message](.github/screenshots/message.png) |
 
 ---
 

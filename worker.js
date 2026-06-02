@@ -259,8 +259,16 @@ function buildHTML(currentDomain) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Disposable email addresses — temp inboxes and mail redirects, no account required.">
+<meta name="description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta name="theme-color" content="#db2777">
+<meta property="og:title" content="ShitPost.email">
+<meta property="og:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ShitPost.email">
+<meta name="twitter:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
 <title>ShitPost.email</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💩</text></svg>">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 
