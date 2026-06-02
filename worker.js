@@ -266,12 +266,12 @@ function buildHTML(currentDomain) {
 
 /* ── Dark theme: default ─────────────────────────────────────────────────── */
 :root {
-  --bg:#0c0c0c;--surface:#141414;--s2:#1c1c1c;--s3:#242424;
-  --border:#2c2c2c;--border2:#383838;
+  --bg:#16161d;--surface:#1e1e28;--s2:#25252f;--s3:#2c2c38;
+  --border:#333345;--border2:#3d3d52;
   --accent:#db2777;--accent2:#f472b6;--accent3:#fbcfe8;
   --text:#f0f0f0;--muted:#6b6b6b;--muted2:#4d4d4d;
   --green:#22c55e;--red:#f87171;
-  --shadow:0 4px 24px rgba(0,0,0,.45);
+  --shadow:0 4px 24px rgba(0,0,0,.35);
   --disc-bg:rgba(219,39,119,.07);--disc-border:rgba(219,39,119,.25);--disc-text:#f472b6;
 }
 
@@ -291,12 +291,12 @@ function buildHTML(currentDomain) {
 
 /* ── Manual overrides: html[data-theme] has higher specificity (element + attribute) ── */
 html[data-theme="dark"] {
-  --bg:#0c0c0c;--surface:#141414;--s2:#1c1c1c;--s3:#242424;
-  --border:#2c2c2c;--border2:#383838;
+  --bg:#16161d;--surface:#1e1e28;--s2:#25252f;--s3:#2c2c38;
+  --border:#333345;--border2:#3d3d52;
   --accent:#db2777;--accent2:#f472b6;--accent3:#fbcfe8;
   --text:#f0f0f0;--muted:#6b6b6b;--muted2:#4d4d4d;
   --green:#22c55e;--red:#f87171;
-  --shadow:0 4px 24px rgba(0,0,0,.45);
+  --shadow:0 4px 24px rgba(0,0,0,.35);
   --disc-bg:rgba(219,39,119,.07);--disc-border:rgba(219,39,119,.25);--disc-text:#f472b6;
 }
 html[data-theme="light"] {
@@ -530,7 +530,7 @@ const App = (() => {
       <div class="card">
         <label for="u">Username</label>
         <div class="igroup">
-          <input id="u" type="text" placeholder="cooluser42" oninput="App._onInput()"
+          <input id="u" type="text" placeholder="shitlord69" oninput="App._onInput()"
             autocomplete="off" autocapitalize="off" spellcheck="false" aria-required="true"/>
           <span class="at" aria-hidden="true">@</span>
           <select id="d" onchange="App._onInput()" aria-label="Domain">
@@ -539,7 +539,7 @@ const App = (() => {
         </div>
         <label for="target">Forward to <span class="label-opt">optional — leave blank for a temp inbox</span></label>
         <input id="target" type="email" class="mb1"
-          placeholder="you@gmail.com — or leave empty for a temporary inbox"
+          placeholder="definitely@real.email — or leave empty for a temp inbox"
           oninput="App._onInput()" autocomplete="email"/>
         <label for="dur" id="dur-label">Keep inbox for</label>
         <select id="dur" class="mb1" onchange="App._onInput()">
@@ -606,6 +606,10 @@ const App = (() => {
     }
     if (!/^[a-zA-Z0-9._+\\-]{1,64}$/.test(username)) {
       errEl.textContent = 'Username can only contain letters, numbers, and . _ + -';
+      errEl.classList.add('show'); return;
+    }
+    if (target && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) {
+      errEl.textContent = "That doesn’t look like a valid email address.";
       errEl.classList.add('show'); return;
     }
 
