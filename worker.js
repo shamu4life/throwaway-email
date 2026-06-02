@@ -190,7 +190,7 @@ async function handleCreate(request, env) {
   try { body = await request.json(); }
   catch { return json({ error: 'Invalid JSON' }, 400); }
 
-  const { username, domain, target } = body;
+  const { username, domain, target, ttl: reqTtl } = body;
   const type = (target && target.trim()) ? 'redirect' : 'inbox';
 
   if (!username || !domain)   return json({ error: 'Missing fields' }, 400);
@@ -204,8 +204,11 @@ async function handleCreate(request, env) {
   if (await env.KV.get(`addr:${email}`))
     return json({ error: 'That address is already taken — try a different username.' }, 409);
 
-  const now   = Math.floor(Date.now() / 1000);
-  const ttl   = type === 'inbox' ? INBOX_TTL : REDIRECT_TTL;
+  const now = Math.floor(Date.now() / 1000);
+  const t   = parseInt(reqTtl, 10);
+  const ttl = type === 'inbox'
+    ? (Number.isFinite(t) && t >= 3600    && t <= 172800   ? t : INBOX_TTL)
+    : (Number.isFinite(t) && t >= 2592000 && t <= 15552000 ? t : REDIRECT_TTL);
   const token = type === 'inbox' ? crypto.randomUUID().replace(/-/g, '') : null;
 
   await env.KV.put(`addr:${email}`, JSON.stringify({
@@ -256,20 +259,28 @@ function buildHTML(currentDomain) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Disposable email addresses — temp inboxes and mail redirects, no account required.">
+<meta name="description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta name="theme-color" content="#db2777">
+<meta property="og:title" content="ShitPost.email">
+<meta property="og:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ShitPost.email">
+<meta name="twitter:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
 <title>ShitPost.email</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💩</text></svg>">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 
 /* ── Dark theme: default ─────────────────────────────────────────────────── */
 :root {
-  --bg:#0c0c0c;--surface:#141414;--s2:#1c1c1c;--s3:#242424;
-  --border:#2c2c2c;--border2:#383838;
-  --accent:#f97316;--accent2:#fb923c;--accent3:#fdba74;
+  --bg:#16161d;--surface:#1e1e28;--s2:#25252f;--s3:#2c2c38;
+  --border:#333345;--border2:#3d3d52;
+  --accent:#db2777;--accent2:#f472b6;--accent3:#fbcfe8;
   --text:#f0f0f0;--muted:#6b6b6b;--muted2:#4d4d4d;
   --green:#22c55e;--red:#f87171;
-  --shadow:0 4px 24px rgba(0,0,0,.45);
-  --disc-bg:rgba(249,115,22,.07);--disc-border:rgba(249,115,22,.25);--disc-text:#fb923c;
+  --shadow:0 4px 24px rgba(0,0,0,.35);
+  --disc-bg:rgba(219,39,119,.07);--disc-border:rgba(219,39,119,.25);--disc-text:#f472b6;
 }
 
 /* ── Light theme: system preference ─────────────────────────────────────── */
@@ -278,32 +289,32 @@ function buildHTML(currentDomain) {
   :root {
     --bg:#f5f5f5;--surface:#ffffff;--s2:#eeeeee;--s3:#e5e5e5;
     --border:#d8d8d8;--border2:#c2c2c2;
-    --accent:#e8630a;--accent2:#f97316;--accent3:#c25408;
+    --accent:#be185d;--accent2:#db2777;--accent3:#9d174d;
     --text:#111111;--muted:#666666;--muted2:#999999;
     --green:#16a34a;--red:#dc2626;
     --shadow:0 4px 24px rgba(0,0,0,.08);
-    --disc-bg:rgba(232,99,10,.07);--disc-border:rgba(232,99,10,.25);--disc-text:#c25408;
+    --disc-bg:rgba(190,24,93,.07);--disc-border:rgba(190,24,93,.25);--disc-text:#9d174d;
   }
 }
 
 /* ── Manual overrides: html[data-theme] has higher specificity (element + attribute) ── */
 html[data-theme="dark"] {
-  --bg:#0c0c0c;--surface:#141414;--s2:#1c1c1c;--s3:#242424;
-  --border:#2c2c2c;--border2:#383838;
-  --accent:#f97316;--accent2:#fb923c;--accent3:#fdba74;
+  --bg:#16161d;--surface:#1e1e28;--s2:#25252f;--s3:#2c2c38;
+  --border:#333345;--border2:#3d3d52;
+  --accent:#db2777;--accent2:#f472b6;--accent3:#fbcfe8;
   --text:#f0f0f0;--muted:#6b6b6b;--muted2:#4d4d4d;
   --green:#22c55e;--red:#f87171;
-  --shadow:0 4px 24px rgba(0,0,0,.45);
-  --disc-bg:rgba(249,115,22,.07);--disc-border:rgba(249,115,22,.25);--disc-text:#fb923c;
+  --shadow:0 4px 24px rgba(0,0,0,.35);
+  --disc-bg:rgba(219,39,119,.07);--disc-border:rgba(219,39,119,.25);--disc-text:#f472b6;
 }
 html[data-theme="light"] {
   --bg:#f5f5f5;--surface:#ffffff;--s2:#eeeeee;--s3:#e5e5e5;
   --border:#d8d8d8;--border2:#c2c2c2;
-  --accent:#e8630a;--accent2:#f97316;--accent3:#c25408;
+  --accent:#be185d;--accent2:#db2777;--accent3:#9d174d;
   --text:#111111;--muted:#666666;--muted2:#999999;
   --green:#16a34a;--red:#dc2626;
   --shadow:0 4px 24px rgba(0,0,0,.08);
-  --disc-bg:rgba(232,99,10,.07);--disc-border:rgba(232,99,10,.25);--disc-text:#c25408;
+  --disc-bg:rgba(190,24,93,.07);--disc-border:rgba(190,24,93,.25);--disc-text:#9d174d;
 }
 
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .2s,color .2s}
@@ -322,7 +333,7 @@ h1{font-size:1.6rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-.02em}
 label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.05em}
 .label-opt{font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--muted2);margin-left:.3rem}
 input,select{width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:.6rem .85rem;border-radius:6px;font-size:.9rem;outline:2px solid transparent;transition:border-color .15s,box-shadow .15s,outline-color .15s;font-family:inherit}
-input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(249,115,22,.18);outline-color:var(--accent)}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(219,39,119,.18);outline-color:var(--accent)}
 input::placeholder{color:var(--muted2)}
 select option{background:var(--s2);color:var(--text)}
 .igroup{display:flex;gap:.4rem;align-items:center;margin-bottom:1.1rem}
@@ -341,12 +352,12 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .disc-body li{margin-bottom:.25rem}
 .disc-chevron{margin-left:auto;transition:transform .2s;font-style:normal}
 .disc-chevron.open{transform:rotate(180deg)}
-.btn-primary{width:100%;padding:.72rem;background:var(--accent);color:#0f0f0f;border:none;border-radius:7px;font-size:.95rem;font-weight:800;letter-spacing:.01em;transition:opacity .15s;font-family:inherit;cursor:pointer}
+.btn-primary{width:100%;padding:.72rem;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:.95rem;font-weight:800;letter-spacing:.01em;transition:opacity .15s;font-family:inherit;cursor:pointer}
 .btn-primary:hover{opacity:.88}
 .btn-primary:disabled{opacity:.45;cursor:not-allowed}
 .btn-sm{padding:.38rem .8rem;background:var(--s2);color:var(--text);border:1px solid var(--border2);border-radius:5px;font-size:.8rem;font-weight:600;transition:border-color .15s,background .15s;font-family:inherit;cursor:pointer}
 .btn-sm:hover{border-color:var(--accent);background:var(--s3)}
-.btn-sm.on{border-color:var(--accent);background:rgba(249,115,22,.12);color:var(--accent2)}
+.btn-sm.on{border-color:var(--accent);background:rgba(219,39,119,.12);color:var(--accent2)}
 .btn-danger{padding:.38rem .8rem;background:rgba(220,38,38,.07);color:var(--red);border:1px solid rgba(220,38,38,.22);border-radius:5px;font-size:.8rem;font-weight:600;font-family:inherit;transition:all .15s;cursor:pointer}
 .btn-danger:hover{background:rgba(220,38,38,.14)}
 .err{background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.22);color:var(--red);padding:.65rem .9rem;border-radius:6px;margin-bottom:.9rem;font-size:.835rem;display:none}
@@ -523,11 +534,11 @@ const App = (() => {
     el('dbadge').textContent = INIT_DOMAIN;
     ren(\`
       <h1>Burner Inbox</h1>
-      <p class="sub">A throwaway address in seconds. 24-hour self-destructing inboxes or permanent mail redirects — no account, no logging, no drama.</p>
+      <p class="sub">A throwaway address in seconds. 24-hour self-destructing inboxes or 30-day mail redirects — no account, no logging, no drama.</p>
       <div class="card">
         <label for="u">Username</label>
         <div class="igroup">
-          <input id="u" type="text" placeholder="cooluser42" oninput="App._onInput()"
+          <input id="u" type="text" placeholder="shitlord69" oninput="App._onInput()"
             autocomplete="off" autocapitalize="off" spellcheck="false" aria-required="true"/>
           <span class="at" aria-hidden="true">@</span>
           <select id="d" onchange="App._onInput()" aria-label="Domain">
@@ -536,8 +547,18 @@ const App = (() => {
         </div>
         <label for="target">Forward to <span class="label-opt">optional — leave blank for a temp inbox</span></label>
         <input id="target" type="email" class="mb1"
-          placeholder="you@gmail.com — or leave empty for a temporary inbox"
+          placeholder="definitely@real.email — or leave empty for a temp inbox"
           oninput="App._onInput()" autocomplete="email"/>
+        <label for="dur" id="dur-label">Keep inbox for</label>
+        <select id="dur" class="mb1" onchange="App._onInput()">
+          <option value="3600">1 hour</option>
+          <option value="7200">2 hours</option>
+          <option value="14400">4 hours</option>
+          <option value="21600">6 hours</option>
+          <option value="43200">12 hours</option>
+          <option value="86400" selected>24 hours</option>
+          <option value="172800">48 hours</option>
+        </select>
         <div class="mode-hint" id="mode-hint" aria-live="polite"></div>
         \${discHTML()}
         <div class="err" id="herr" role="alert"></div>
@@ -549,17 +570,33 @@ const App = (() => {
     requestAnimationFrame(() => { el('u')?.focus(); });
   }
 
+  function _rebuildDur(inboxMode) {
+    const sel = el('dur'), lbl = el('dur-label');
+    if (!sel) return;
+    if (sel.dataset.mode === (inboxMode ? 'i' : 'r')) return;
+    sel.dataset.mode = inboxMode ? 'i' : 'r';
+    if (lbl) lbl.textContent = inboxMode ? 'Keep inbox for' : 'Active for';
+    const def  = inboxMode ? 86400 : 2592000;
+    const opts = inboxMode
+      ? [[3600,'1 hour'],[7200,'2 hours'],[14400,'4 hours'],[21600,'6 hours'],[43200,'12 hours'],[86400,'24 hours'],[172800,'48 hours']]
+      : [[2592000,'1 month'],[5184000,'2 months'],[7776000,'3 months'],[15552000,'6 months']];
+    sel.innerHTML = opts.map(function(o){ return '<option value="' + o[0] + '"' + (o[0] === def ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
+  }
+
   function _onInput() {
     const u    = (el('u')?.value || '').trim();
     const d    = el('d')?.value || INIT_DOMAIN;
     const tgt  = (el('target')?.value || '').trim();
     const hint = el('mode-hint');
     el('dbadge').textContent = d;
+    _rebuildDur(!tgt);
     if (!u) { if (hint) hint.textContent = ''; return; }
-    const addr = u.toLowerCase() + '@' + d;
+    const addr   = u.toLowerCase() + '@' + d;
+    const durSel = el('dur');
+    const durTxt = durSel ? durSel.options[durSel.selectedIndex].text : '';
     if (hint) hint.textContent = tgt
-      ? '↪️  ' + addr + ' → forward to ' + tgt
-      : '📥  ' + addr + ' → temporary inbox (12 hours)';
+      ? '↪️  ' + addr + ' → ' + tgt + ' · ' + durTxt
+      : '📥  ' + addr + ' → temp inbox · ' + durTxt;
   }
 
   async function _create() {
@@ -579,14 +616,21 @@ const App = (() => {
       errEl.textContent = 'Username can only contain letters, numbers, and . _ + -';
       errEl.classList.add('show'); return;
     }
+    if (target && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) {
+      errEl.textContent = "That doesn’t look like a valid email address.";
+      errEl.classList.add('show'); return;
+    }
 
     btn.disabled = true;
     btn.innerHTML = '<span class="spin" aria-hidden="true"></span>Creating…';
     btn.setAttribute('aria-busy', 'true');
 
+    const durSel = el('dur');
+    const ttl    = durSel ? parseInt(durSel.value, 10) : (target ? 2592000 : 86400);
+
     const res = await api('/api/create', {
       method: 'POST',
-      body: JSON.stringify({ username, domain, target: target || undefined }),
+      body: JSON.stringify({ username, domain, target: target || undefined, ttl }),
     });
 
     btn.disabled = false;
@@ -602,7 +646,9 @@ const App = (() => {
       _inbox = { email: res.email, token: res.token, expires: res.expires };
       showInboxReady(res);
     } else {
-      showRedirectReady(res, target);
+      const ds = el('dur');
+      const durLabel = ds ? ds.options[ds.selectedIndex].text : '1 month';
+      showRedirectReady(res, target, durLabel);
     }
   }
 
@@ -627,7 +673,7 @@ const App = (() => {
     \`);
   }
 
-  function showRedirectReady(res, target) {
+  function showRedirectReady(res, target, durLabel) {
     ren(\`
       <div class="sbox">
         <div class="sbox-label">Redirect active</div>
@@ -636,7 +682,7 @@ const App = (() => {
           → All mail forwarded to <strong style="color:var(--text)">\${esc(target)}</strong>
         </div>
         <button class="btn-sm" id="copybtn" onclick="App._copy('\${res.email}','copybtn')">Copy Address</button>
-        <div class="sbox-meta">Active for <strong>30 days</strong> · Forwards instantly · 5 MB per email max</div>
+        <div class="sbox-meta">Active for <strong>\${esc(durLabel || '1 month')}</strong> · Forwards instantly · 5 MB per email max</div>
       </div>
       <button class="btn-sm mt" onclick="App.home()">← Create another</button>
     \`);
