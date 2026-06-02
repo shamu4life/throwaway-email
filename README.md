@@ -2,8 +2,6 @@
 
 <img src=".github/logo.svg" alt="ShitPost.email" width="600">
 
-<br><br>
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-db2777.svg)](LICENSE)
 [![Cloudflare Workers](https://img.shields.io/badge/Deployed_on-Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-22c55e.svg)]()
