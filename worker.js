@@ -3,7 +3,7 @@
 // Paste this directly into the Cloudflare dashboard editor (no bundler needed).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ALLOWED_DOMAINS = ['letsfuckingpiss.party', 'shitpost.email', 'megapenispoopenfarten.sex'];
+const ALLOWED_DOMAINS = ['shitpost.email', 'letsfuckingpiss.party', 'megapenispoopenfarten.sex'];
 const INBOX_TTL       = 86400;           // 24 hours
 const REDIRECT_TTL    = 2592000;         // 30 days
 const MAX_MESSAGES    = 50;
@@ -256,71 +256,73 @@ function buildHTML(currentDomain) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ThrowMail</title>
+<meta name="description" content="Disposable email addresses — temp inboxes and mail redirects, no account required.">
+<title>ShitPost.email</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 
 /* ── Dark theme: default ─────────────────────────────────────────────────── */
 :root {
-  --bg:#07070d;--surface:#10101a;--s2:#181827;--s3:#1f1f31;
-  --border:#252535;--border2:#33334a;
-  --accent:#7c3aed;--accent2:#a78bfa;--accent3:#c4b5fd;
-  --text:#e2e8f0;--muted:#64748b;--muted2:#475569;
-  --green:#10b981;--red:#f87171;
+  --bg:#0c0c0c;--surface:#141414;--s2:#1c1c1c;--s3:#242424;
+  --border:#2c2c2c;--border2:#383838;
+  --accent:#f97316;--accent2:#fb923c;--accent3:#fdba74;
+  --text:#f0f0f0;--muted:#6b6b6b;--muted2:#4d4d4d;
+  --green:#22c55e;--red:#f87171;
   --shadow:0 4px 24px rgba(0,0,0,.45);
-  --disc-bg:rgba(251,191,36,.06);--disc-border:rgba(251,191,36,.2);--disc-text:#fbbf24;
+  --disc-bg:rgba(249,115,22,.07);--disc-border:rgba(249,115,22,.25);--disc-text:#fb923c;
 }
 
 /* ── Light theme: system preference ─────────────────────────────────────── */
 /* Comes after :root so it wins when the media query matches (same specificity, later = wins) */
 @media (prefers-color-scheme: light) {
   :root {
-    --bg:#f3f4f8;--surface:#ffffff;--s2:#f0f1f6;--s3:#e8e9f2;
-    --border:#dde0ec;--border2:#c8cce0;
-    --accent:#6d28d9;--accent2:#7c3aed;--accent3:#5b21b6;
-    --text:#1e1b3a;--muted:#6b7280;--muted2:#9ca3af;
-    --green:#059669;--red:#dc2626;
-    --shadow:0 4px 24px rgba(100,100,140,.12);
-    --disc-bg:rgba(217,119,6,.06);--disc-border:rgba(217,119,6,.2);--disc-text:#b45309;
+    --bg:#f5f5f5;--surface:#ffffff;--s2:#eeeeee;--s3:#e5e5e5;
+    --border:#d8d8d8;--border2:#c2c2c2;
+    --accent:#e8630a;--accent2:#f97316;--accent3:#c25408;
+    --text:#111111;--muted:#666666;--muted2:#999999;
+    --green:#16a34a;--red:#dc2626;
+    --shadow:0 4px 24px rgba(0,0,0,.08);
+    --disc-bg:rgba(232,99,10,.07);--disc-border:rgba(232,99,10,.25);--disc-text:#c25408;
   }
 }
 
 /* ── Manual overrides: html[data-theme] has higher specificity (element + attribute) ── */
 html[data-theme="dark"] {
-  --bg:#07070d;--surface:#10101a;--s2:#181827;--s3:#1f1f31;
-  --border:#252535;--border2:#33334a;
-  --accent:#7c3aed;--accent2:#a78bfa;--accent3:#c4b5fd;
-  --text:#e2e8f0;--muted:#64748b;--muted2:#475569;
-  --green:#10b981;--red:#f87171;
+  --bg:#0c0c0c;--surface:#141414;--s2:#1c1c1c;--s3:#242424;
+  --border:#2c2c2c;--border2:#383838;
+  --accent:#f97316;--accent2:#fb923c;--accent3:#fdba74;
+  --text:#f0f0f0;--muted:#6b6b6b;--muted2:#4d4d4d;
+  --green:#22c55e;--red:#f87171;
   --shadow:0 4px 24px rgba(0,0,0,.45);
-  --disc-bg:rgba(251,191,36,.06);--disc-border:rgba(251,191,36,.2);--disc-text:#fbbf24;
+  --disc-bg:rgba(249,115,22,.07);--disc-border:rgba(249,115,22,.25);--disc-text:#fb923c;
 }
 html[data-theme="light"] {
-  --bg:#f3f4f8;--surface:#ffffff;--s2:#f0f1f6;--s3:#e8e9f2;
-  --border:#dde0ec;--border2:#c8cce0;
-  --accent:#6d28d9;--accent2:#7c3aed;--accent3:#5b21b6;
-  --text:#1e1b3a;--muted:#6b7280;--muted2:#9ca3af;
-  --green:#059669;--red:#dc2626;
-  --shadow:0 4px 24px rgba(100,100,140,.12);
-  --disc-bg:rgba(217,119,6,.06);--disc-border:rgba(217,119,6,.2);--disc-text:#b45309;
+  --bg:#f5f5f5;--surface:#ffffff;--s2:#eeeeee;--s3:#e5e5e5;
+  --border:#d8d8d8;--border2:#c2c2c2;
+  --accent:#e8630a;--accent2:#f97316;--accent3:#c25408;
+  --text:#111111;--muted:#666666;--muted2:#999999;
+  --green:#16a34a;--red:#dc2626;
+  --shadow:0 4px 24px rgba(0,0,0,.08);
+  --disc-bg:rgba(232,99,10,.07);--disc-border:rgba(232,99,10,.25);--disc-text:#c25408;
 }
 
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .2s,color .2s}
 header{border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;gap:.75rem;flex-shrink:0}
-.logo{font-size:1.05rem;font-weight:800;color:var(--accent2);background:none;border:none;padding:0;cursor:pointer;transition:color .15s;font-family:inherit}
-.logo:hover{color:var(--accent3)}
+.logo{font-size:1.05rem;font-weight:800;color:var(--text);background:none;border:none;padding:0;cursor:pointer;transition:color .15s;font-family:inherit;letter-spacing:-.01em}
+.logo:hover{color:var(--accent2)}
+.logo-tld{color:var(--accent)}
 .dbadge{font-size:.7rem;background:var(--s2);border:1px solid var(--border2);padding:.15rem .55rem;border-radius:999px;color:var(--muted);font-family:monospace;flex-shrink:0;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hspace{flex:1}
-.theme-btn{background:var(--s2);border:1px solid var(--border2);color:var(--muted);padding:.35rem .65rem;border-radius:7px;font-size:.8rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.35rem;flex-shrink:0;font-family:inherit}
+.theme-btn{background:var(--s2);border:1px solid var(--border2);color:var(--muted);padding:.35rem .65rem;border-radius:5px;font-size:.8rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.35rem;flex-shrink:0;font-family:inherit}
 .theme-btn:hover{border-color:var(--accent);color:var(--text)}
 main{flex:1;padding:2rem 1rem;max-width:620px;margin:0 auto;width:100%}
 h1{font-size:1.6rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-.02em}
 .sub{color:var(--muted);font-size:.875rem;line-height:1.7;margin-bottom:1.75rem}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow)}
 label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.05em}
 .label-opt{font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--muted2);margin-left:.3rem}
-input,select{width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:.6rem .85rem;border-radius:8px;font-size:.9rem;outline:2px solid transparent;transition:border-color .15s,box-shadow .15s,outline-color .15s;font-family:inherit}
-input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(109,40,217,.15);outline-color:var(--accent)}
+input,select{width:100%;background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:.6rem .85rem;border-radius:6px;font-size:.9rem;outline:2px solid transparent;transition:border-color .15s,box-shadow .15s,outline-color .15s;font-family:inherit}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(249,115,22,.18);outline-color:var(--accent)}
 input::placeholder{color:var(--muted2)}
 select option{background:var(--s2);color:var(--text)}
 .igroup{display:flex;gap:.4rem;align-items:center;margin-bottom:1.1rem}
@@ -329,7 +331,7 @@ select option{background:var(--s2);color:var(--text)}
 .at{color:var(--muted);font-weight:700;flex-shrink:0;font-size:.9rem}
 .mb1{margin-bottom:1.1rem}
 .mode-hint{font-size:.78rem;color:var(--accent2);min-height:1.2em;margin-bottom:.9rem;font-weight:500;word-break:break-all}
-.disc{background:var(--disc-bg);border:1px solid var(--disc-border);border-radius:10px;padding:.85rem 1rem;margin-bottom:1.1rem}
+.disc{background:var(--disc-bg);border:1px solid var(--disc-border);border-radius:6px;padding:.85rem 1rem;margin-bottom:1.1rem}
 .disc-hd{display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:700;color:var(--disc-text);cursor:pointer;user-select:none;background:none;border:none;width:100%;text-align:left;padding:0;font-family:inherit}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -339,17 +341,17 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .disc-body li{margin-bottom:.25rem}
 .disc-chevron{margin-left:auto;transition:transform .2s;font-style:normal}
 .disc-chevron.open{transform:rotate(180deg)}
-.btn-primary{width:100%;padding:.72rem;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:.95rem;font-weight:700;transition:opacity .15s;font-family:inherit;cursor:pointer}
+.btn-primary{width:100%;padding:.72rem;background:var(--accent);color:#0f0f0f;border:none;border-radius:7px;font-size:.95rem;font-weight:800;letter-spacing:.01em;transition:opacity .15s;font-family:inherit;cursor:pointer}
 .btn-primary:hover{opacity:.88}
 .btn-primary:disabled{opacity:.45;cursor:not-allowed}
-.btn-sm{padding:.38rem .8rem;background:var(--s2);color:var(--text);border:1px solid var(--border2);border-radius:7px;font-size:.8rem;font-weight:600;transition:border-color .15s,background .15s;font-family:inherit;cursor:pointer}
+.btn-sm{padding:.38rem .8rem;background:var(--s2);color:var(--text);border:1px solid var(--border2);border-radius:5px;font-size:.8rem;font-weight:600;transition:border-color .15s,background .15s;font-family:inherit;cursor:pointer}
 .btn-sm:hover{border-color:var(--accent);background:var(--s3)}
-.btn-sm.on{border-color:var(--accent);background:rgba(109,40,217,.12);color:var(--accent2)}
-.btn-danger{padding:.38rem .8rem;background:rgba(220,38,38,.07);color:var(--red);border:1px solid rgba(220,38,38,.22);border-radius:7px;font-size:.8rem;font-weight:600;font-family:inherit;transition:all .15s;cursor:pointer}
+.btn-sm.on{border-color:var(--accent);background:rgba(249,115,22,.12);color:var(--accent2)}
+.btn-danger{padding:.38rem .8rem;background:rgba(220,38,38,.07);color:var(--red);border:1px solid rgba(220,38,38,.22);border-radius:5px;font-size:.8rem;font-weight:600;font-family:inherit;transition:all .15s;cursor:pointer}
 .btn-danger:hover{background:rgba(220,38,38,.14)}
-.err{background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.22);color:var(--red);padding:.65rem .9rem;border-radius:8px;margin-bottom:.9rem;font-size:.835rem;display:none}
+.err{background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.22);color:var(--red);padding:.65rem .9rem;border-radius:6px;margin-bottom:.9rem;font-size:.835rem;display:none}
 .err.show{display:block}
-.sbox{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.22);border-radius:12px;padding:1.2rem 1.4rem;margin-bottom:1rem}
+.sbox{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.22);border-radius:8px;padding:1.2rem 1.4rem;margin-bottom:1rem}
 .sbox-label{font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem}
 .email-addr{font-size:1rem;font-weight:800;color:var(--green);word-break:break-all;font-family:monospace;margin:.3rem 0 .7rem}
 .sbox-meta{font-size:.78rem;color:var(--muted);line-height:1.85;margin-top:.75rem}
@@ -362,7 +364,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .msg-list{display:flex;flex-direction:column;gap:.45rem}
-.msg-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid transparent;border-radius:10px;padding:.85rem 1rem;cursor:pointer;transition:border-color .15s,background .15s}
+.msg-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid transparent;border-radius:6px;padding:.85rem 1rem;cursor:pointer;transition:border-color .15s,background .15s}
 .msg-item:hover{border-color:var(--accent);background:var(--s2)}
 .msg-item.new{border-left-color:var(--accent2)}
 .msg-row1{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.2rem}
@@ -375,8 +377,8 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .mv-subject{font-size:1.2rem;font-weight:800;margin-bottom:.7rem;line-height:1.3}
 .mv-meta{font-size:.78rem;color:var(--muted);line-height:2;margin-bottom:1.2rem}
 .mv-meta strong{color:var(--text)}
-.mv-body{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem;font-size:.875rem;line-height:1.75;white-space:pre-wrap;word-break:break-word;max-height:520px;overflow-y:auto}
-iframe.htmlbody{width:100%;height:480px;border:1px solid var(--border);border-radius:10px;background:#fff}
+.mv-body{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem;font-size:.875rem;line-height:1.75;white-space:pre-wrap;word-break:break-word;max-height:520px;overflow-y:auto}
+iframe.htmlbody{width:100%;height:480px;border:1px solid var(--border);border-radius:8px;background:#fff}
 .view-toggle{display:flex;gap:.4rem;margin-bottom:.7rem}
 .spin{display:inline-block;width:.85rem;height:.85rem;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .55s linear infinite;vertical-align:middle;margin-right:.35rem}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -386,7 +388,7 @@ footer{border-top:1px solid var(--border);padding:.8rem 1.5rem;text-align:center
 </head>
 <body>
 <header>
-  <button class="logo" onclick="App.home()" aria-label="ThrowMail — go to home">📬 ThrowMail</button>
+  <button class="logo" onclick="App.home()" aria-label="ShitPost.email — go to home">💩 ShitPost<span class="logo-tld">.email</span></button>
   <span class="dbadge" id="dbadge">${currentDomain}</span>
   <div class="hspace"></div>
   <button class="theme-btn" id="theme-btn" onclick="App.toggleTheme()">
@@ -395,7 +397,7 @@ footer{border-top:1px solid var(--border);padding:.8rem 1.5rem;text-align:center
 </header>
 <main id="app" tabindex="-1"></main>
 <div id="announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-<footer>No account needed · Emails auto-delete after 24h · No logs · No fucks given</footer>
+<footer>No accounts · No logs · Inboxes self-destruct after 24h · Zero fucks given</footer>
 <script>
 const DOMAINS      = ${JSON.stringify(ALLOWED_DOMAINS)};
 const INIT_DOMAIN  = ${JSON.stringify(currentDomain)};
@@ -520,8 +522,8 @@ const App = (() => {
     _inbox = null; _messages = []; _activeMsg = null;
     el('dbadge').textContent = INIT_DOMAIN;
     ren(\`
-      <h1>Throwaway Email</h1>
-      <p class="sub">Pick a username and domain. Leave the forwarding field empty for a 24-hour temporary inbox, or enter an address to forward all mail there instead.</p>
+      <h1>Burner Inbox</h1>
+      <p class="sub">A throwaway address in seconds. 24-hour self-destructing inboxes or permanent mail redirects — no account, no logging, no drama.</p>
       <div class="card">
         <label for="u">Username</label>
         <div class="igroup">
