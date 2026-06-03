@@ -1,6 +1,35 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// ThrowMail — dependency-free Cloudflare Worker
-// Paste this directly into the Cloudflare dashboard editor (no bundler needed).
+// ThrowMail (ShitPost.email) — dependency-free Cloudflare Worker
+//
+// Disposable email: pick a username + domain to get a self-destructing INBOX
+// (mail parsed and stored in KV) or a REDIRECT (mail forwarded to a real
+// address). The JSON API, the persistence layer, and the entire web UI all
+// live in this one file — zero runtime dependencies, no build step. It is
+// meant to be paste-able straight into the Cloudflare dashboard editor.
+//
+// File layout (keep new code under the matching banner):
+//   1. Config constants        — domains + TTL/size/count limits
+//   2. Inline MIME parser       — parseEmail … decodeRfc2047 (no mail-parse dep)
+//   3. Email event handling     — handleEmailEvent, streamToArrayBuffer
+//   4. API handlers             — handleAPI, handleCreate, handleGet/DeleteInbox
+//   5. UI                       — serveUI, buildHTML (embedded SPA)
+//   6. Helpers + exports        — json(), { fetch, email }
+//
+// Cloudflare bindings (see wrangler.toml):
+//   env.KV               — KV namespace; the only persistence layer.
+//   [[send_email]]       — used by message.forward() for redirects.
+//
+// KV key schema:
+//   addr:<email>  → { type:'inbox'|'redirect', target?, token?, created, expires }
+//   msgs:<email>  → [ { id, from, fromName, subject, text, html, date }, … ]  (newest first, ≤ MAX_MESSAGES)
+//   Both keys are written with an expirationTtl — KV enforces expiry, no cron.
+//
+// HTTP API (all JSON, CORS open):
+//   POST   /api/create  { username, domain, target?, ttl? } → { email, token, type, expires }
+//   GET    /api/inbox?email=&token=                          → { email, messages, expires, count }
+//   DELETE /api/inbox?email=&token=                          → { deleted: true }
+//
+// Full architecture notes live in CLAUDE.md.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ALLOWED_DOMAINS = ['shitpost.email', 'letsfuckingpiss.party', 'megapenispoopenfarten.sex'];
@@ -827,6 +856,8 @@ function json(data, status = 200) {
 }
 
 export default {
+  // HTTP entry point: serves the SPA on every non-API route, dispatches /api/*
+  // to the JSON API, and answers CORS preflight (OPTIONS) requests.
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') {
@@ -840,6 +871,10 @@ export default {
     return serveUI(request);
   },
 
+  // Inbound-mail entry point: Cloudflare Email Routing invokes this per message.
+  // Errors are caught and turned into a reject so mail bounces visibly rather
+  // than vanishing. NOTE: this handler does not fire under `wrangler dev` — test
+  // it via a staging deploy on a configured zone.
   async email(message, env, ctx) {
     try {
       await handleEmailEvent(message, env);
@@ -849,3 +884,11 @@ export default {
     }
   },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test exports — the pure MIME-parsing helpers, exported for unit tests
+// (test/parse.test.js). Cloudflare uses only the default export's fetch/email
+// handlers; these extra named exports are inert in the Worker runtime and keep
+// the file paste-able into the dashboard editor.
+// ─────────────────────────────────────────────────────────────────────────────
+export { parseEmail, parseHeaders, extractBoundary, extractParts, decodePart, parseAddress, decodeRfc2047 };

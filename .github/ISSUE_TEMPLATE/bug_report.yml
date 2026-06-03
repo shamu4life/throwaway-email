@@ -1,0 +1,78 @@
+name: Bug report
+description: Something is broken or behaving incorrectly
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: A clear, concise description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the app is affected?
+      options:
+        - Inbox (temporary mailbox)
+        - Redirect (mail forwarding)
+        - Web UI
+        - HTTP API
+        - Email delivery / parsing
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: domain
+    attributes:
+      label: Domain used
+      description: Which throwaway domain was the address on?
+      placeholder: "e.g. shitpost.email"
+    validations:
+      required: false
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & version
+      placeholder: "e.g. Chrome 124, Safari 17.4, Firefox 125"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS & version
+      placeholder: "e.g. iOS 17.4, Android 15, macOS 14.4, Windows 11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Console errors, network responses, the raw email that misparsed, screen recordings — anything that helps.
+    validations:
+      required: false
