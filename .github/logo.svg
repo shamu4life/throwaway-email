@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="160" viewBox="0 0 800 160">
-  <rect width="800" height="160" fill="#16161d" rx="12"/>
-  <text x="400" y="92" text-anchor="middle" font-family="system-ui,-apple-system,BlinkMacSystemFont,sans-serif" font-weight="900" font-size="66" letter-spacing="-2">
-    <tspan fill="#f0f0f0">ShitPost</tspan><tspan fill="#db2777">.email</tspan>
-  </text>
-  <text x="400" y="132" text-anchor="middle" font-family="system-ui,-apple-system,BlinkMacSystemFont,sans-serif" font-size="20" fill="#6b6b6b">Disposable email, no bullshit.</text>
-</svg>
