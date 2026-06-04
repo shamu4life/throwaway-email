@@ -386,14 +386,14 @@ function buildHTML(currentDomain) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta name="description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no tracking, no drama.">
 <meta name="theme-color" content="#db2777">
 <meta property="og:title" content="ShitPost.email">
-<meta property="og:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta property="og:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no tracking, no drama.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ShitPost.email">
-<meta name="twitter:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta name="twitter:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no tracking, no drama.">
 <title>ShitPost.email</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💩</text></svg>">
 <style>
@@ -549,7 +549,7 @@ footer{border-top:1px solid var(--border);padding:.8rem 1.5rem;text-align:center
 </header>
 <main id="app" tabindex="-1"></main>
 <div id="announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-<footer>No accounts · No logs · Inboxes self-destruct after 24h · Zero fucks given</footer>
+<footer>No accounts · No tracking · Inboxes self-destruct after 24h · Zero fucks given</footer>
 <a class="bmc-btn" href="${BMC_URL}" target="_blank" rel="noopener noreferrer" aria-label="Buy me a coffee — support this project">
   <span class="bmc-cup" aria-hidden="true">☕</span> Buy me a coffee
 </a>
@@ -655,6 +655,7 @@ const App = (() => {
         <li><strong>Temporary inboxes expire after 1–48 hours</strong> (your choice). All messages are permanently deleted.</li>
         <li><strong>Mail redirects expire after 1–6 months</strong> (your choice) with no notification.</li>
         <li><strong>Nothing is encrypted.</strong> Emails are stored as plain text in Cloudflare KV. Throwaway use only.</li>
+        <li><strong>Redirects aren't private.</strong> Forwarded mail is re-sent through a third-party mail provider (Cloudflare / Resend) that handles it in transit — don't redirect anything sensitive.</li>
         <li><strong>5 MB per email limit.</strong> Larger emails are rejected.</li>
         <li><strong>No recovery.</strong> Losing your browser session means losing inbox access permanently.</li>
         <li><strong>Do not use for anything sensitive</strong> — passwords, financial info, private communications.</li>
@@ -678,7 +679,7 @@ const App = (() => {
     el('dbadge').textContent = INIT_DOMAIN;
     ren(\`
       <h1>Burner Inbox</h1>
-      <p class="sub">A throwaway address in seconds. Self-destructing inboxes (1–48 hours) or mail redirects (1–6 months) — no account, no logging, no drama.</p>
+      <p class="sub">A throwaway address in seconds. Self-destructing inboxes (1–48 hours) or mail redirects (1–6 months) — no account, no tracking, no drama.</p>
       <div class="card">
         <label for="u">Username</label>
         <div class="igroup">

@@ -11,7 +11,7 @@
 
 </div>
 
-<p align="center"><strong>Disposable email addresses on Cloudflare Workers.</strong> Spin up a throwaway inbox or mail redirect in seconds — no account, no logs, no drama.</p>
+<p align="center"><strong>Disposable email addresses on Cloudflare Workers.</strong> Spin up a throwaway inbox or mail redirect in seconds — no account, no tracking, no drama.</p>
 
 ---
 
