@@ -760,7 +760,7 @@ const App = (() => {
       errEl.textContent = 'Username can only contain letters, numbers, and . _ + -';
       errEl.classList.add('show'); return;
     }
-    if (target && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) {
+    if (target && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(target)) {
       errEl.textContent = "That doesn’t look like a valid email address.";
       errEl.classList.add('show'); return;
     }
