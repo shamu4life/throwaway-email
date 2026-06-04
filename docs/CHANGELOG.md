@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.0] — 2026-06-04
+
+### Added
+- Redirect — forwarding now sends through **Cloudflare Email Service** (`env.EMAIL.send()`) as the primary path, with **Resend** kept as an automatic fallback. No behavior change for users; redirected mail still arrives from `forward@shitpost.email` with the original sender in Reply-To.
+
+### Changed
+- Redirect — a redirect only bounces now if **both** providers fail (previously it depended solely on Resend). (internal)
+
+### Notes
+- Self-hosting: redirects use the `[[send_email]]` binding (`EMAIL`); sending to arbitrary recipients via Cloudflare Email Service requires the Workers **Paid** plan. `RESEND_API_KEY` is now an optional fallback. See CONTRIBUTING → Self-Hosting.
+
 ## [1.1.0] — 2026-06-04
 
 ### Changed

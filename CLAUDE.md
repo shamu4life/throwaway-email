@@ -7,7 +7,7 @@ ShitPost.email (repo: `throwaway-email`) is a disposable email service built as 
 **Stack:** Cloudflare Workers + Cloudflare KV + Cloudflare Email Routing
 **UI:** Hand-rolled vanilla JS + CSS, embedded as a template string in `worker.js` (no framework, no bundler)
 **Deploy:** `wrangler deploy`
-**Version:** 1.1.0
+**Version:** 1.2.0
 
 The single most important constraint: **everything stays in `worker.js`, dependency-free, paste-able straight into the Cloudflare dashboard editor.** Do not introduce a bundler, a framework, an npm runtime dependency, or a second source file without explicit agreement.
 
@@ -19,7 +19,7 @@ The single most important constraint: **everything stays in `worker.js`, depende
 throwaway-email/
 ├── README.md               # Product intro, screenshots, caveats, architecture overview
 ├── worker.js               # THE ENTIRE APP (see "worker.js Anatomy" below)
-├── wrangler.toml           # Cloudflare Workers config: KV namespace binding, route, observability, compatibility flags
+├── wrangler.toml           # Cloudflare Workers config: KV binding, route, send_email (EMAIL) binding, observability, compatibility flags
 ├── package.json            # Version source of truth; "type":"module"; dev/deploy/check/test scripts; Wrangler is the only devDependency (tests use the built-in node:test)
 ├── test/
 │   └── parse.test.js       # Unit tests for the pure MIME-parsing helpers (node:test + node:assert, zero deps)
@@ -51,12 +51,12 @@ throwaway-email/
 |---|---|---|
 | **Config constants** | top | `ALLOWED_DOMAINS`, `INBOX_TTL` (24 h), `REDIRECT_TTL` (30 d), `MAX_MESSAGES` (50), `MAX_EMAIL_BYTES` (5 MB), `FORWARD_FROM` |
 | **Inline MIME parser** | `parseEmail` → `decodeRfc2047` | Dependency-free email parsing: header folding, multipart boundary recursion (depth-capped at 4), base64/quoted-printable decoding, RFC 2047 encoded-word decoding, From-address parsing |
-| **Email event handling** | `handleEmailEvent`, `streamToArrayBuffer`, `buildForwardPayload`, `forwardViaResend` | The `email()` handler's core: KV address lookup → re-mail via Resend (redirect) or parse-and-store (inbox); streams raw MIME with a hard 5 MB cap. `buildForwardPayload` is a pure, unit-tested helper that builds the Resend send body |
+| **Email event handling** | `handleEmailEvent`, `streamToArrayBuffer`, `forwardDisplayName`, `buildCloudflareMessage`, `buildForwardPayload`, `forwardMessage` | The `email()` handler's core: KV address lookup → re-mail (redirect) or parse-and-store (inbox); streams raw MIME with a hard 5 MB cap. `forwardMessage` sends via Cloudflare Email Service then falls back to Resend; `buildCloudflareMessage` / `buildForwardPayload` are pure, unit-tested builders for each provider's send shape |
 | **API handlers** | `handleAPI`, `handleCreate`, `handleGetInbox`, `handleDeleteInbox` | The JSON HTTP API behind `/api/*` |
 | **UI** | `serveUI`, `buildHTML` | Returns the full SPA as one HTML string; `buildHTML` interpolates the current domain and the `ALLOWED_DOMAINS` list. Contains all CSS and the vanilla-JS `App` module |
 | **Helpers** | `json` | `json(data, status)` — JSON Response with CORS headers |
 | **Exports** | `export default { fetch, email }` | The two Worker handlers |
-| **Test exports** | trailing `export { … }` | Named exports of the pure parser helpers (plus `buildForwardPayload`) for `test/parse.test.js`. **Inert in the Worker** (Cloudflare only uses the default export) and keep the file paste-able. Add a function here if you write a unit test for it. |
+| **Test exports** | trailing `export { … }` | Named exports of the pure parser helpers (plus `buildForwardPayload` and `buildCloudflareMessage`) for `test/parse.test.js`. **Inert in the Worker** (Cloudflare only uses the default export) and keep the file paste-able. Add a function here if you write a unit test for it. |
 
 ---
 
@@ -230,15 +230,17 @@ Defined at the top of `worker.js`. Changing any of these is a user-visible behav
 | `REDIRECT_TTL` | `2592000` (30 d) | Default redirect lifetime. Accepted override range: **2592000–15552000** (1–6 months). |
 | `MAX_MESSAGES` | `50` | Hard cap on messages retained per inbox (oldest dropped first). |
 | `MAX_EMAIL_BYTES` | `5 * 1024 * 1024` (5 MB) | Inbound messages larger than this are rejected at the edge before storage. |
-| `FORWARD_FROM` | `'forward@shitpost.email'` | The `From` address redirected mail is re-sent from. Must be a domain verified for sending in Resend. |
+| `FORWARD_FROM` | `'forward@shitpost.email'` | The `From` address redirected mail is re-sent from. Must be a domain verified for sending in Cloudflare Email Service (and in Resend, if the fallback is configured). |
 
-### Secrets
+### Bindings & Secrets
 
-Set outside source via `wrangler secret put` (never in `wrangler.toml` or `worker.js`):
+| Name | Kind | Used by | Meaning |
+|---|---|---|---|
+| `KV` | KV namespace binding (`wrangler.toml`) | everywhere | The only persistence layer. |
+| `EMAIL` | `send_email` binding (`wrangler.toml`) | `forwardMessage` | Cloudflare Email Service. **Primary** sender for redirect mail (`env.EMAIL.send()`). Sending to arbitrary recipients requires the Workers **Paid** plan. |
+| `RESEND_API_KEY` | secret (`wrangler secret put`) | `forwardMessage` | Resend API key. **Optional fallback** — used only if `env.EMAIL.send()` fails. |
 
-| Secret | Used by | Meaning |
-|---|---|---|
-| `RESEND_API_KEY` | `forwardViaResend` | Resend API key. Required for **redirects** to work — without it, redirected mail is bounced (`Forwarding failed`). Inboxes work without it. |
+If **neither** `EMAIL` nor `RESEND_API_KEY` is available, redirected mail is bounced (`Forwarding failed`). Inboxes work without either. Secrets never go in `wrangler.toml` or `worker.js`.
 
 ### KV Key Schema
 
@@ -250,7 +252,7 @@ Cloudflare KV (binding name `KV`) is the only persistence layer. Two key familie
 | `msgs:<email>` | `Array<{ id, from, fromName, subject, text, html, date }>` — newest first, sliced to `MAX_MESSAGES` | set to the inbox's **remaining** lifetime (`expires - now`) on each write |
 
 - `token` exists only for `inbox` records; it gates `GET`/`DELETE /api/inbox`. Redirects have no token (nothing to read).
-- `target` exists only for `redirect` records — the real address mail is re-sent to via Resend.
+- `target` exists only for `redirect` records — the real address mail is re-sent to (via Cloudflare Email Service, Resend fallback).
 - `created` / `expires` are **seconds** since epoch.
 - Expiry is enforced entirely by KV's `expirationTtl`; there is no cleanup cron.
 
@@ -270,7 +272,7 @@ All API routes live under `/api/`, dispatched by `handleAPI`. Every response is 
 
 1. Lowercase + trim the destination address; look up `addr:<to>` in KV.
 2. No record → `message.setReject('Unknown address')`.
-3. `redirect` record → stream `message.raw` (same 5 MB cap) → `parseEmail` → `forwardViaResend`: re-mail the message to `record.target` through Resend's HTTP API (`from` = `FORWARD_FROM`, original sender in `Reply-To`). Nothing is stored. On any send failure (missing `RESEND_API_KEY`, non-2xx, network error) the message is rejected with `Forwarding failed` so the sender gets a bounce. **Attachments are not re-sent** — the parser extracts text/HTML only.
+3. `redirect` record → stream `message.raw` (same 5 MB cap) → `parseEmail` → `forwardMessage`: re-mail the message to `record.target` (`from` = `FORWARD_FROM`, original sender in `Reply-To`). Tries **Cloudflare Email Service** (`env.EMAIL.send()`) first, then falls back to **Resend**. Nothing is stored. Only if every available provider fails is the message rejected with `Forwarding failed` so the sender gets a bounce. **Attachments are not re-sent** — the parser extracts text/HTML only.
 4. `inbox` record → stream `message.raw` through `streamToArrayBuffer` with a 5 MB cap (reject `Message exceeds 5 MB size limit` if exceeded) → `parseEmail` → prepend to `msgs:<to>` (truncating to `MAX_MESSAGES`), writing with the inbox's remaining TTL.
 5. The whole handler is wrapped in try/catch; unexpected errors `console.error` and `setReject('Internal error')` so mail bounces rather than silently vanishing.
 
@@ -306,7 +308,7 @@ Stored message bodies are clamped: `text` to 10 000 chars, `html` to 50 000 char
 - **No token = no recovery.** Inbox access is the in-memory token only. There is intentionally no recovery path; don't add one without re-thinking the whole "accountless, nothing-to-leak" premise.
 - **KV is eventually consistent.** A freshly created address may take a moment to be globally visible. The taken-address `409` check is best-effort, not a hard uniqueness guarantee.
 - **Adding a domain is not just code.** Putting a string in `ALLOWED_DOMAINS` does nothing unless that domain has Cloudflare Email Routing configured to invoke this Worker. Update both together.
-- **Redirects depend on Resend, not Cloudflare forwarding.** Cloudflare's native `forward()` only delivers to *pre-verified* destination addresses, which is useless for a public throwaway service. So redirects re-mail through Resend instead: any recipient works, but the message arrives **from `FORWARD_FROM`** (original sender in `Reply-To`), **attachments are dropped**, and it's subject to the Resend plan's send limits (free tier ≈ 100/day, 3 000/month). Without `RESEND_API_KEY` set, redirects bounce.
+- **Redirects re-mail, they don't use Cloudflare's native `forward()`.** `forward()` only delivers to *pre-verified* destination addresses, useless for a public service. So redirects re-send the message: **Cloudflare Email Service** (`env.EMAIL.send()`) first, **Resend** as fallback. Either way the message arrives **from `FORWARD_FROM`** (original sender in `Reply-To`) and **attachments are dropped**. Sending to arbitrary recipients via Cloudflare Email Service needs the Workers **Paid** plan; both providers have per-account/plan send limits. If neither provider is configured/working, redirects bounce.
 - **Forwarded mail is re-mailed, not relayed verbatim.** Because the body is rebuilt from the parser's text/HTML, anything the parser doesn't extract (attachments, inline images, unusual parts) is lost in forwarding. This is a deliberate trade for "forward to anyone without verification."
 
 ---
