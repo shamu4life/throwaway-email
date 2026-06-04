@@ -139,6 +139,12 @@ Every version bump must update all of the following in the **same commit or PR**
 | `docs/CHANGELOG.md` | New `## [{X.Y.Z}] — {YYYY-MM-DD}` section at the top |
 | `.github/screenshots/` | Recapture if the UI changed (see Documentation Maintenance) |
 
+Then, **once the version-bump PR is merged**, cut a matching GitHub release so the repo's Releases sidebar stays in sync (one release per version, tag `vX.Y.Z` on the merge commit, notes from that version's CHANGELOG section, newest marked Latest):
+
+```bash
+gh release create vX.Y.Z --target <merge-commit-sha> --title vX.Y.Z --notes-file <changelog-section> --latest
+```
+
 The `compatibility_date` in `wrangler.toml` is **not** part of a version bump — change it only when intentionally upgrading the Workers runtime.
 
 ### CHANGELOG entry format
