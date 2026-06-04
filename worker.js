@@ -45,6 +45,8 @@ const REDIRECT_TTL    = 2592000;         // 30 days
 const MAX_MESSAGES    = 50;
 const MAX_EMAIL_BYTES = 5 * 1024 * 1024; // 5 MB
 const FORWARD_FROM    = 'forward@shitpost.email'; // "from" address for redirected mail (must be a verified sending domain in Cloudflare Email Service / Resend)
+const REPO_URL        = 'https://github.com/shamu4life/throwaway-email'; // source + bug-report links in the UI header
+const BMC_URL         = 'https://buymeacoffee.com/shamu4life'; // self-hosted "Buy me a coffee" button target (no third-party widget script)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline MIME parser
@@ -384,14 +386,14 @@ function buildHTML(currentDomain) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta name="description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no tracking, no drama.">
 <meta name="theme-color" content="#db2777">
 <meta property="og:title" content="ShitPost.email">
-<meta property="og:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta property="og:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no tracking, no drama.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ShitPost.email">
-<meta name="twitter:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no logs, no drama.">
+<meta name="twitter:description" content="Disposable email, no bullshit. Temp inboxes and mail redirects — no account, no tracking, no drama.">
 <title>ShitPost.email</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💩</text></svg>">
 <style>
@@ -451,6 +453,14 @@ header{border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;
 .hspace{flex:1}
 .theme-btn{background:var(--s2);border:1px solid var(--border2);color:var(--muted);padding:.35rem .65rem;border-radius:5px;font-size:.8rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.35rem;flex-shrink:0;font-family:inherit}
 .theme-btn:hover{border-color:var(--accent);color:var(--text)}
+.icon-btn{display:flex;align-items:center;justify-content:center;background:var(--s2);border:1px solid var(--border2);color:var(--muted);padding:.35rem;border-radius:5px;cursor:pointer;transition:all .15s;flex-shrink:0;min-width:32px;min-height:32px;text-decoration:none}
+.icon-btn:hover{border-color:var(--accent);color:var(--text)}
+.icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.icon-btn svg{width:16px;height:16px;display:block}
+.bmc-btn{position:fixed;right:18px;bottom:18px;z-index:50;display:inline-flex;align-items:center;gap:.4rem;background:#5F7FFF;color:#fff;font-family:inherit;font-size:.9rem;font-weight:700;padding:.6rem .95rem;border-radius:999px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:transform .15s,box-shadow .15s}
+.bmc-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.bmc-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.bmc-btn .bmc-cup{font-size:1.05rem;line-height:1}
 main{flex:1;padding:2rem 1rem;max-width:620px;margin:0 auto;width:100%}
 h1{font-size:1.6rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-.02em}
 .sub{color:var(--muted);font-size:.875rem;line-height:1.7;margin-bottom:1.75rem}
@@ -527,13 +537,22 @@ footer{border-top:1px solid var(--border);padding:.8rem 1.5rem;text-align:center
   <button class="logo" onclick="App.home()" aria-label="ShitPost.email — go to home">💩 ShitPost<span class="logo-tld">.email</span></button>
   <span class="dbadge" id="dbadge">${currentDomain}</span>
   <div class="hspace"></div>
+  <a class="icon-btn" href="${REPO_URL}" target="_blank" rel="noopener noreferrer" title="View source on GitHub" aria-label="View source on GitHub">
+    <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+  </a>
+  <a class="icon-btn" href="${REPO_URL}/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer" title="Report a bug" aria-label="Report a bug on GitHub">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6Z"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg>
+  </a>
   <button class="theme-btn" id="theme-btn" onclick="App.toggleTheme()">
     <span id="theme-icon"></span><span id="theme-label"></span>
   </button>
 </header>
 <main id="app" tabindex="-1"></main>
 <div id="announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-<footer>No accounts · No logs · Inboxes self-destruct after 24h · Zero fucks given</footer>
+<footer>No accounts · No tracking · Inboxes self-destruct after 24h · Zero fucks given</footer>
+<a class="bmc-btn" href="${BMC_URL}" target="_blank" rel="noopener noreferrer" aria-label="Buy me a coffee — support this project">
+  <span class="bmc-cup" aria-hidden="true">☕</span> Buy me a coffee
+</a>
 <script>
 const DOMAINS      = ${JSON.stringify(ALLOWED_DOMAINS)};
 const INIT_DOMAIN  = ${JSON.stringify(currentDomain)};
@@ -636,6 +655,7 @@ const App = (() => {
         <li><strong>Temporary inboxes expire after 1–48 hours</strong> (your choice). All messages are permanently deleted.</li>
         <li><strong>Mail redirects expire after 1–6 months</strong> (your choice) with no notification.</li>
         <li><strong>Nothing is encrypted.</strong> Emails are stored as plain text in Cloudflare KV. Throwaway use only.</li>
+        <li><strong>Redirects aren't private.</strong> Forwarded mail is re-sent through a third-party mail provider (Cloudflare / Resend) that handles it in transit — don't redirect anything sensitive.</li>
         <li><strong>5 MB per email limit.</strong> Larger emails are rejected.</li>
         <li><strong>No recovery.</strong> Losing your browser session means losing inbox access permanently.</li>
         <li><strong>Do not use for anything sensitive</strong> — passwords, financial info, private communications.</li>
@@ -659,7 +679,7 @@ const App = (() => {
     el('dbadge').textContent = INIT_DOMAIN;
     ren(\`
       <h1>Burner Inbox</h1>
-      <p class="sub">A throwaway address in seconds. Self-destructing inboxes (1–48 hours) or mail redirects (1–6 months) — no account, no logging, no drama.</p>
+      <p class="sub">A throwaway address in seconds. Self-destructing inboxes (1–48 hours) or mail redirects (1–6 months) — no account, no tracking, no drama.</p>
       <div class="card">
         <label for="u">Username</label>
         <div class="igroup">
@@ -741,7 +761,7 @@ const App = (() => {
       errEl.textContent = 'Username can only contain letters, numbers, and . _ + -';
       errEl.classList.add('show'); return;
     }
-    if (target && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) {
+    if (target && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(target)) {
       errEl.textContent = "That doesn’t look like a valid email address.";
       errEl.classList.add('show'); return;
     }

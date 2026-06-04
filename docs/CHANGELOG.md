@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.0] — 2026-06-04
+
+### Added
+- UI — header now has a **View source on GitHub** link and a **Report a bug** link (opens a pre-filled GitHub issue).
+- UI — a **Buy Me a Coffee** support button (floating, bottom-right). Self-hosted HTML/CSS linking to Buy Me a Coffee — no third-party script or external asset is loaded.
+
+### Changed
+- Copy — replaced the "no logs / no logging" claim with "no tracking" (footer, home page, meta tags) to match reality, and added a disclosure note that redirects are re-sent through a third-party mail provider. The web app still loads no trackers; mail forwarding inherently passes content through a sender.
+
+### Fixed
+- Redirect — the "Forward to" field no longer rejects valid addresses whose local part contains the letter `s` (e.g. `shamu4life@gmail.com`). A regex-escaping bug in the client-side validation had been silently substituting "no letter s" for "no whitespace"; it now also correctly rejects addresses containing spaces. (Server-side validation was unaffected.)
+
 ## [1.2.0] — 2026-06-04
 
 ### Added
