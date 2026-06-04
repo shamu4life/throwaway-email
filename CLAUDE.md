@@ -49,7 +49,7 @@ throwaway-email/
 
 | Section | Lines (approx) | What it is |
 |---|---|---|
-| **Config constants** | top | `ALLOWED_DOMAINS`, `INBOX_TTL` (24 h), `REDIRECT_TTL` (30 d), `MAX_MESSAGES` (50), `MAX_EMAIL_BYTES` (5 MB), `FORWARD_FROM`, `REPO_URL` |
+| **Config constants** | top | `ALLOWED_DOMAINS`, `INBOX_TTL` (24 h), `REDIRECT_TTL` (30 d), `MAX_MESSAGES` (50), `MAX_EMAIL_BYTES` (5 MB), `FORWARD_FROM`, `REPO_URL`, `BMC_URL` |
 | **Inline MIME parser** | `parseEmail` → `decodeRfc2047` | Dependency-free email parsing: header folding, multipart boundary recursion (depth-capped at 4), base64/quoted-printable decoding, RFC 2047 encoded-word decoding, From-address parsing |
 | **Email event handling** | `handleEmailEvent`, `streamToArrayBuffer`, `forwardDisplayName`, `buildCloudflareMessage`, `buildForwardPayload`, `forwardMessage` | The `email()` handler's core: KV address lookup → re-mail (redirect) or parse-and-store (inbox); streams raw MIME with a hard 5 MB cap. `forwardMessage` sends via Cloudflare Email Service then falls back to Resend; `buildCloudflareMessage` / `buildForwardPayload` are pure, unit-tested builders for each provider's send shape |
 | **API handlers** | `handleAPI`, `handleCreate`, `handleGetInbox`, `handleDeleteInbox` | The JSON HTTP API behind `/api/*` |
@@ -232,6 +232,7 @@ Defined at the top of `worker.js`. Changing any of these is a user-visible behav
 | `MAX_EMAIL_BYTES` | `5 * 1024 * 1024` (5 MB) | Inbound messages larger than this are rejected at the edge before storage. |
 | `FORWARD_FROM` | `'forward@shitpost.email'` | The `From` address redirected mail is re-sent from. Must be a domain verified for sending in Cloudflare Email Service (and in Resend, if the fallback is configured). |
 | `REPO_URL` | GitHub repo URL | Target for the header "View source" link and the "Report a bug" link (`+ /issues/new?template=bug_report.yml`). |
+| `BMC_URL` | Buy Me a Coffee URL | Target for the self-hosted floating "Buy me a coffee" button. |
 
 ### Bindings & Secrets
 
@@ -286,14 +287,14 @@ Stored message bodies are clamped: `text` to 10 000 chars, `html` to 50 000 char
 - **Inbox polling:** auto-refreshes every `REFRESH_SECS` (30 s) with a visible countdown.
 - **Session token:** the inbox token is held **in memory only** (module-scoped `_inbox`), never persisted. Closing the tab discards it — by design.
 - **Header links:** two `.icon-btn` anchors — "View source on GitHub" (`REPO_URL`) and "Report a bug" (`REPO_URL` + `/issues/new?template=bug_report.yml`) — sit next to the theme toggle.
-- **Buy Me a Coffee widget:** a third-party `<script>` from `cdnjs.buymeacoffee.com` (data-id `shamu4life`) is injected before `</body>` and self-renders a floating button. This is the **one external client-side resource** the page loads — a deliberate exception to the otherwise dependency-free UI (it does **not** affect the Worker's zero-npm-dependency rule). Don't "clean it up" as a stray dependency.
+- **Buy Me a Coffee button:** a self-hosted floating `.bmc-btn` anchor (fixed bottom-right, BMC brand color `#5F7FFF`, ☕ glyph) links to `BMC_URL`. **Not** the third-party BMC widget script — it's plain HTML/CSS, so the page loads **no** external client-side resources.
 - `buildHTML(currentDomain)` interpolates the current request's domain (so the displayed default matches the host) and the full `ALLOWED_DOMAINS` list into the dropdown.
 
 ---
 
 ## Conventions
 
-- **Single file, zero dependencies.** All production code stays in `worker.js`. Do not add an npm runtime dependency, a bundler, a framework, or a second source file. Wrangler (dev/deploy only) is the sole devDependency. The one sanctioned **client-side** third-party resource is the Buy Me a Coffee widget script in `buildHTML` (see Web UI); don't add others without a deliberate reason.
+- **Single file, zero dependencies.** All production code stays in `worker.js`. Do not add an npm runtime dependency, a bundler, a framework, or a second source file. Wrangler (dev/deploy only) is the sole devDependency. The served page loads **no third-party client-side scripts or assets** either (the "Buy me a coffee" button is a self-hosted `<a>`, not the BMC widget) — keep it that way.
 - **Paste-ability.** `worker.js` must remain valid to paste directly into the Cloudflare dashboard editor. No imports of local modules, no build-time transforms.
 - **Section discipline.** Keep new code under the matching banner comment (Config / MIME parser / Email / API / UI / Helpers / Exports).
 - **CORS stays open.** The API is intentionally `Access-Control-Allow-Origin: *`. Don't tighten it without a reason — the UI and any third-party caller depend on it.

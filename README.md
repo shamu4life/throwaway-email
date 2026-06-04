@@ -61,7 +61,7 @@ Instead of an inbox, point a throwaway address at a real one. Everything sent to
 <details>
 <summary><strong>Web UI</strong></summary>
 
-A fully functional single-page app served from the same Worker — no separate frontend, no framework, just hand-rolled vanilla JS and CSS embedded in `worker.js`. Dark and light themes (follows your OS by default, with a manual toggle persisted in `localStorage`), a live auto-refreshing inbox with countdown, copy-to-clipboard for your address, and one-tap message delete. The header links to the source on GitHub and a quick **Report a bug** form, and there's a Buy Me a Coffee support button (the page's only third-party script).
+A fully functional single-page app served from the same Worker — no separate frontend, no framework, just hand-rolled vanilla JS and CSS embedded in `worker.js`. Dark and light themes (follows your OS by default, with a manual toggle persisted in `localStorage`), a live auto-refreshing inbox with countdown, copy-to-clipboard for your address, and one-tap message delete. The header links to the source on GitHub and a quick **Report a bug** form, and there's a self-hosted Buy Me a Coffee support button — no third-party scripts load on the page.
 
 </details>
 

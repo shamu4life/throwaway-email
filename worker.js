@@ -46,6 +46,7 @@ const MAX_MESSAGES    = 50;
 const MAX_EMAIL_BYTES = 5 * 1024 * 1024; // 5 MB
 const FORWARD_FROM    = 'forward@shitpost.email'; // "from" address for redirected mail (must be a verified sending domain in Cloudflare Email Service / Resend)
 const REPO_URL        = 'https://github.com/shamu4life/throwaway-email'; // source + bug-report links in the UI header
+const BMC_URL         = 'https://buymeacoffee.com/shamu4life'; // self-hosted "Buy me a coffee" button target (no third-party widget script)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline MIME parser
@@ -456,6 +457,10 @@ header{border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;
 .icon-btn:hover{border-color:var(--accent);color:var(--text)}
 .icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .icon-btn svg{width:16px;height:16px;display:block}
+.bmc-btn{position:fixed;right:18px;bottom:18px;z-index:50;display:inline-flex;align-items:center;gap:.4rem;background:#5F7FFF;color:#fff;font-family:inherit;font-size:.9rem;font-weight:700;padding:.6rem .95rem;border-radius:999px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:transform .15s,box-shadow .15s}
+.bmc-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.bmc-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.bmc-btn .bmc-cup{font-size:1.05rem;line-height:1}
 main{flex:1;padding:2rem 1rem;max-width:620px;margin:0 auto;width:100%}
 h1{font-size:1.6rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-.02em}
 .sub{color:var(--muted);font-size:.875rem;line-height:1.7;margin-bottom:1.75rem}
@@ -545,6 +550,9 @@ footer{border-top:1px solid var(--border);padding:.8rem 1.5rem;text-align:center
 <main id="app" tabindex="-1"></main>
 <div id="announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 <footer>No accounts · No logs · Inboxes self-destruct after 24h · Zero fucks given</footer>
+<a class="bmc-btn" href="${BMC_URL}" target="_blank" rel="noopener noreferrer" aria-label="Buy me a coffee — support this project">
+  <span class="bmc-cup" aria-hidden="true">☕</span> Buy me a coffee
+</a>
 <script>
 const DOMAINS      = ${JSON.stringify(ALLOWED_DOMAINS)};
 const INIT_DOMAIN  = ${JSON.stringify(currentDomain)};
@@ -947,8 +955,6 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
   if (!localStorage.getItem('tm-theme')) App.home(); // re-render syncs the button
 });
 </script>
-<!-- Buy Me a Coffee floating widget (third-party script — the one external client-side dependency on the page). -->
-<script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="shamu4life" data-description="Support me on Buy me a coffee!" data-message="Thanks for your support!" data-color="#5F7FFF" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
 </body>
 </html>`;
 }

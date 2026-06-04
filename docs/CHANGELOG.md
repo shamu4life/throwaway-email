@@ -9,7 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - UI — header now has a **View source on GitHub** link and a **Report a bug** link (opens a pre-filled GitHub issue).
-- UI — a **Buy Me a Coffee** support widget (floating button). Note: this loads a third-party script from `cdnjs.buymeacoffee.com` — the page's only external client-side resource.
+- UI — a **Buy Me a Coffee** support button (floating, bottom-right). Self-hosted HTML/CSS linking to Buy Me a Coffee — no third-party script or external asset is loaded.
 
 ## [1.2.0] — 2026-06-04
 
