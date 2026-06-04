@@ -1,6 +1,6 @@
 name = "throwaway-email"
 main = "worker.js"
-compatibility_date = "2024-09-23"
+compatibility_date = "2025-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 [[kv_namespaces]]
@@ -11,5 +11,10 @@ id      = "39574b78356244e2a1db30eb487d2c78"
 pattern   = "shitpost.email/*"
 zone_name = "shitpost.email"
 
-[[send_email]]
-name = "THROWMAIL_EMAIL"
+# Workers logs + traces. head_sampling_rate = 1 keeps every invocation while
+# volume is low; lower it if request volume grows.
+[observability]
+enabled = true
+
+[observability.logs]
+head_sampling_rate = 1

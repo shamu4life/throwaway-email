@@ -7,7 +7,7 @@ ShitPost.email (repo: `throwaway-email`) is a disposable email service built as 
 **Stack:** Cloudflare Workers + Cloudflare KV + Cloudflare Email Routing
 **UI:** Hand-rolled vanilla JS + CSS, embedded as a template string in `worker.js` (no framework, no bundler)
 **Deploy:** `wrangler deploy`
-**Version:** 1.0.0
+**Version:** 1.0.1
 
 The single most important constraint: **everything stays in `worker.js`, dependency-free, paste-able straight into the Cloudflare dashboard editor.** Do not introduce a bundler, a framework, an npm runtime dependency, or a second source file without explicit agreement.
 
@@ -19,7 +19,7 @@ The single most important constraint: **everything stays in `worker.js`, depende
 throwaway-email/
 ├── README.md               # Product intro, screenshots, caveats, architecture overview
 ├── worker.js               # THE ENTIRE APP (see "worker.js Anatomy" below)
-├── wrangler.toml           # Cloudflare Workers config: KV namespace binding, route, send_email binding, compatibility flags
+├── wrangler.toml           # Cloudflare Workers config: KV namespace binding, route, observability, compatibility flags
 ├── package.json            # Version source of truth; "type":"module"; dev/deploy/check/test scripts; Wrangler is the only devDependency (tests use the built-in node:test)
 ├── test/
 │   └── parse.test.js       # Unit tests for the pure MIME-parsing helpers (node:test + node:assert, zero deps)
