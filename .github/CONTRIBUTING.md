@@ -132,6 +132,12 @@ A version bump updates **all** of these in the same PR:
 
 Commit message convention: `chore: bump to vX.Y.Z`.
 
+After the version-bump PR merges, **cut a matching GitHub release** so the Releases sidebar stays current — tag `vX.Y.Z` on the merge commit, with notes from that version's `docs/CHANGELOG.md` section (newest is marked Latest):
+
+```bash
+gh release create vX.Y.Z --target <merge-commit-sha> --title vX.Y.Z --notes-file <changelog-section> --latest
+```
+
 ---
 
 ## Documentation Requirements
