@@ -15,10 +15,14 @@
 //   5. UI                       — serveUI, buildHTML (embedded SPA)
 //   6. Helpers + exports        — json(), { fetch, email }
 //
-// Cloudflare bindings (see wrangler.toml):
+// Cloudflare bindings + secrets (see wrangler.toml / `wrangler secret put`):
 //   env.KV               — KV namespace; the only persistence layer.
-// Redirects use message.forward() from the inbound email() event, which needs
-// no send_email binding (that is only for the outbound EmailMessage send API).
+//   env.RESEND_API_KEY   — secret; Resend API key used to re-send (forward)
+//                          redirect mail. Set via `wrangler secret put RESEND_API_KEY`.
+// Redirects re-mail the message through Resend's HTTP API (from FORWARD_FROM,
+// with the original sender in Reply-To) so they reach ANY address — Cloudflare's
+// native forward() only delivers to pre-verified destinations. Attachments are
+// not re-sent (the inline parser extracts text/HTML only).
 //
 // KV key schema:
 //   addr:<email>  → { type:'inbox'|'redirect', target?, token?, created, expires }
@@ -38,6 +42,7 @@ const INBOX_TTL       = 86400;           // 24 hours
 const REDIRECT_TTL    = 2592000;         // 30 days
 const MAX_MESSAGES    = 50;
 const MAX_EMAIL_BYTES = 5 * 1024 * 1024; // 5 MB
+const FORWARD_FROM    = 'forward@shitpost.email'; // "from" address for redirected mail (must be a Resend-verified sending domain)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline MIME parser
@@ -158,7 +163,20 @@ async function handleEmailEvent(message, env) {
   const record = await env.KV.get(`addr:${to}`, 'json');
   if (!record) { message.setReject('Unknown address'); return; }
 
-  if (record.type === 'redirect') { await message.forward(record.target); return; }
+  if (record.type === 'redirect') {
+    let rawBuffer;
+    try {
+      rawBuffer = await streamToArrayBuffer(message.raw, MAX_EMAIL_BYTES);
+    } catch (err) {
+      if (err.message === 'TOO_LARGE') { message.setReject('Message exceeds 5 MB size limit'); return; }
+      throw err;
+    }
+    const parsed = parseEmail(rawBuffer);
+    const ok = await forwardViaResend(env, record.target, parsed);
+    // Reject so the sender gets a bounce rather than a silent black hole.
+    if (!ok) message.setReject('Forwarding failed — try again later');
+    return;
+  }
 
   if (record.type === 'inbox') {
     let rawBuffer;
@@ -198,6 +216,52 @@ async function streamToArrayBuffer(stream, maxBytes) {
   let offset = 0;
   for (const c of chunks) { out.set(c, offset); offset += c.length; }
   return out.buffer;
+}
+
+// Build the Resend send payload for a redirected message. Pure + total — no I/O,
+// never throws — so it can be unit-tested. The message is re-mailed FROM our
+// verified sender (display name carries the original sender, header-breaking
+// characters stripped) with the real sender in Reply-To so replies still work.
+function buildForwardPayload(parsed, to, from) {
+  const name = (parsed.fromName || parsed.from || 'Unknown sender')
+    .replace(/[\r\n"\\<>]/g, '').trim().slice(0, 100) || 'Unknown sender';
+  const payload = {
+    from: `"${name} via ShitPost" <${from}>`,
+    to: [to],
+    subject: parsed.subject || '(no subject)',
+  };
+  if (parsed.from) payload.reply_to = parsed.from;
+  if (parsed.html) payload.html = parsed.html;
+  if (parsed.text || !parsed.html) payload.text = parsed.text || '(empty message)';
+  return payload;
+}
+
+// Re-send a parsed message to the redirect target via Resend's HTTP API.
+// Returns true on success; false (with a structured log) on any failure so the
+// caller can bounce the original message. Attachments are not forwarded.
+async function forwardViaResend(env, to, parsed) {
+  if (!env.RESEND_API_KEY) {
+    console.error(JSON.stringify({ event: 'forward_no_key', to }));
+    return false;
+  }
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(buildForwardPayload(parsed, to, FORWARD_FROM)),
+    });
+    if (!r.ok) {
+      console.error(JSON.stringify({ event: 'forward_send_failed', status: r.status, detail: (await r.text()).slice(0, 300) }));
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error(JSON.stringify({ event: 'forward_send_error', message: err && err.message }));
+    return false;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -712,7 +776,7 @@ const App = (() => {
           → All mail forwarded to <strong style="color:var(--text)">\${esc(target)}</strong>
         </div>
         <button class="btn-sm" id="copybtn" onclick="App._copy('\${res.email}','copybtn')">Copy Address</button>
-        <div class="sbox-meta">Active for <strong>\${esc(durLabel || '1 month')}</strong> · Forwards instantly · 5 MB per email max</div>
+        <div class="sbox-meta">Active for <strong>\${esc(durLabel || '1 month')}</strong> · Forwards instantly · 5 MB per email max<br>Arrives from <strong>forward@shitpost.email</strong> (hit reply to reach the real sender) · attachments are not forwarded</div>
       </div>
       <button class="btn-sm mt" onclick="App.home()">← Create another</button>
     \`);
@@ -909,4 +973,4 @@ export default {
 // handlers; these extra named exports are inert in the Worker runtime and keep
 // the file paste-able into the dashboard editor.
 // ─────────────────────────────────────────────────────────────────────────────
-export { parseEmail, parseHeaders, extractBoundary, extractParts, decodePart, parseAddress, decodeRfc2047 };
+export { parseEmail, parseHeaders, extractBoundary, extractParts, decodePart, parseAddress, decodeRfc2047, buildForwardPayload };

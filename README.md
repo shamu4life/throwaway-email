@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-db2777.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/shamu4life/throwaway-email/ci.yml?branch=main&label=CI&color=db2777)](../../actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-1.0.1-db2777.svg)](docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.1.0-db2777.svg)](docs/CHANGELOG.md)
 [![Cloudflare Workers](https://img.shields.io/badge/Deployed_on-Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-22c55e.svg)]()
 
@@ -54,7 +54,7 @@ Pick a username and a domain and you get a real, working inbox. Mail addressed t
 <details>
 <summary><strong>Mail Redirects</strong></summary>
 
-Instead of an inbox, point a throwaway address at a real one. Everything sent to `you@shitpost.email` is forwarded straight through Cloudflare Email Routing to your real inbox — nothing is stored. Redirects stay active for a window you choose (**1 to 6 months**) and then expire automatically.
+Instead of an inbox, point a throwaway address at a real one. Everything sent to `you@shitpost.email` is re-sent to your real inbox — nothing is stored. Forwarding works to **any** address (no verification dance): the mail arrives from `forward@shitpost.email` with the original sender in **Reply-To**, so just hit reply to write back. Attachments aren't forwarded. Redirects stay active for a window you choose (**1 to 6 months**) and then expire automatically.
 
 </details>
 
@@ -81,6 +81,7 @@ This is a throwaway-mail toy, not a secure mailbox. Know what you're getting:
 - **Nothing is encrypted.** Emails sit in Cloudflare KV as plain text. Use this for junk signups and OTP codes, **not** anything sensitive.
 - **Access is session-scoped and unrecoverable.** The token lives in memory. Close the tab and you lose the inbox forever — no reset, no recovery.
 - **5 MB per email.** Larger messages are rejected at the edge before they ever hit KV.
+- **Redirects re-mail, they don't relay.** Forwarded mail arrives from `forward@shitpost.email` (reply still reaches the real sender), **attachments are dropped**, and sending is subject to the Resend free tier (~100/day).
 - **No uptime guarantee.** It's a Cloudflare Worker. It'll probably be fine. Probably.
 
 ---
@@ -93,7 +94,7 @@ This is a throwaway-mail toy, not a secure mailbox. Know what you're getting:
 Everything is one Worker exporting two handlers:
 
 - **`fetch`** — serves the web UI on every non-API route and dispatches `/api/*` requests to the JSON API. CORS is wide open (`Access-Control-Allow-Origin: *`).
-- **`email`** — Cloudflare Email Routing invokes this for every inbound message. It looks up the destination address in KV: `redirect` records are forwarded with `message.forward()`; `inbox` records have their raw MIME streamed (capped at 5 MB), parsed in-Worker, and prepended to the message list in KV.
+- **`email`** — Cloudflare Email Routing invokes this for every inbound message. It looks up the destination address in KV: `redirect` records are parsed and re-mailed to the target via the Resend API (so they reach any address, no verification needed); `inbox` records have their raw MIME streamed (capped at 5 MB), parsed in-Worker, and prepended to the message list in KV.
 
 There is no separate database, queue, or backend — **Cloudflare KV is the only persistence layer**, and the inline MIME parser means no mail-parsing dependency.
 
@@ -124,6 +125,7 @@ Both keys carry a KV `expirationTtl`, so expiry is enforced by KV itself — the
 | Runtime | Cloudflare Workers |
 | Storage | Cloudflare KV |
 | Email ingestion | Cloudflare Email Routing |
+| Redirect forwarding | Resend API (re-mail to any address) |
 | Web UI | Hand-rolled vanilla JS + CSS (no framework) |
 | Dependencies | None (Wrangler is the only dev dependency) |
 
@@ -157,7 +159,7 @@ Everything that runs in production lives in `worker.js`. No bundler, no build st
 
 ## Self-Hosting
 
-Want your own throwaway-mail domain? See **[CONTRIBUTING.md](.github/CONTRIBUTING.md)** for the full setup — creating the KV namespace, wiring up Cloudflare Email Routing, and pointing your own domains at the Worker. The short version:
+Want your own throwaway-mail domain? See **[CONTRIBUTING.md](.github/CONTRIBUTING.md)** for the full setup — creating the KV namespace, wiring up Cloudflare Email Routing, adding a Resend API key for redirects, and pointing your own domains at the Worker. The short version:
 
 ```bash
 git clone https://github.com/shamu4life/throwaway-email.git

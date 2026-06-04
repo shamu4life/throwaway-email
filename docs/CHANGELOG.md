@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.0] — 2026-06-04
+
+### Changed
+- Redirect — forwarding now works to **any** email address, not just Cloudflare-verified ones. Mail is re-sent through Resend, so the recipient never has to verify anything. Forwarded mail arrives from `forward@shitpost.email` with the original sender in Reply-To (hit reply and it reaches them).
+
+### Removed
+- Redirect — **attachments are no longer included** in forwarded mail (the message is rebuilt from its text/HTML). Inboxes are unaffected.
+
+### Notes
+- Self-hosting now requires a `RESEND_API_KEY` secret for redirects to work; inboxes work without it. Free Resend tier caps sending at ~100/day. See CONTRIBUTING → Self-Hosting.
+
 ## [1.0.1] — 2026-06-03
 
 ### Changed

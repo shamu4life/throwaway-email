@@ -61,7 +61,16 @@ To stand up your own throwaway-mail domain you need a Cloudflare account with at
 
 3. **Configure Cloudflare Email Routing** on each domain (Cloudflare dashboard → your domain → Email → Email Routing). Add a **catch-all** rule that sends to this Worker so every inbound message invokes the `email()` handler. Without this, inboxes and redirects receive nothing.
 
-4. **Verified destinations for redirects.** Redirects use `message.forward()` from the inbound `email()` event — no `[[send_email]]` binding is required. Cloudflare only forwards to **verified destination addresses**, so add and verify each redirect target in Email Routing (Cloudflare dashboard → your domain → Email → Email Routing → Destination addresses) before forwarding to it.
+4. **Set up Resend for redirects** (skip if you only want inboxes). Redirects re-mail through [Resend](https://resend.com) so they reach any address without the recipient verifying anything — Cloudflare's native `forward()` only delivers to pre-verified destinations, which is useless for a public service.
+
+   1. Create a free Resend account and **add + verify a sending domain** (Resend shows the SPF/DKIM/DMARC DNS records — add them in your Cloudflare DNS dashboard). Verify the domain used in `FORWARD_FROM` at the top of `worker.js` (default `forward@shitpost.email`; change it to your own domain).
+   2. Create a Resend **API key** and store it as a Worker secret — never in `wrangler.toml` or `worker.js`:
+
+      ```bash
+      npx wrangler secret put RESEND_API_KEY
+      ```
+
+   Without this secret, redirects bounce (`Forwarding failed`); inboxes still work. Note attachments are not forwarded, and the free Resend tier caps sending at ~100/day.
 
 5. **Deploy:**
 
@@ -69,7 +78,7 @@ To stand up your own throwaway-mail domain you need a Cloudflare account with at
    npm run deploy
    ```
 
-Cloudflare credentials are managed via `wrangler login`. No `.env` file or secrets are required — the Worker has no API keys.
+Cloudflare credentials are managed via `wrangler login`. The only secret is `RESEND_API_KEY` (above), set via `wrangler secret put` — there is no `.env` file in source.
 
 ---
 

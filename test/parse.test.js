@@ -19,6 +19,7 @@ import {
   decodePart,
   parseAddress,
   decodeRfc2047,
+  buildForwardPayload,
 } from '../worker.js';
 
 const enc = (s) => new TextEncoder().encode(s).buffer;
@@ -99,4 +100,25 @@ test('parseEmail extracts both parts from a multipart/alternative message', () =
 
 test('parseEmail never throws on garbage input', () => {
   assert.doesNotThrow(() => parseEmail(enc('not really an email at all')));
+});
+
+test('buildForwardPayload re-mails from the forwarder with original sender in reply_to', () => {
+  const parsed = { subject: 'Hi', from: 'alice@example.com', fromName: 'Alice', text: 'hello', html: '' };
+  const p = buildForwardPayload(parsed, 'bob@gmail.com', 'forward@shitpost.email');
+  assert.equal(p.from, '"Alice via ShitPost" <forward@shitpost.email>');
+  assert.deepEqual(p.to, ['bob@gmail.com']);
+  assert.equal(p.reply_to, 'alice@example.com');
+  assert.equal(p.subject, 'Hi');
+  assert.equal(p.text, 'hello');
+  assert.equal(p.html, undefined);            // text-only message carries no html key
+});
+
+test('buildForwardPayload strips header-breaking chars, falls back on empty fields', () => {
+  const parsed = { subject: '', from: '', fromName: 'Ev"il<>\r\nName', text: '', html: '<p>hi</p>' };
+  const p = buildForwardPayload(parsed, 'r@z.com', 'forward@shitpost.email');
+  assert.equal(p.from, '"EvilName via ShitPost" <forward@shitpost.email>'); // quotes/brackets/CRLF removed
+  assert.equal(p.subject, '(no subject)');    // empty subject filled
+  assert.equal(p.reply_to, undefined);        // no sender → no reply_to
+  assert.equal(p.html, '<p>hi</p>');
+  assert.equal(p.text, undefined);            // html present, no text → text omitted
 });
