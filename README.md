@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-db2777.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/shamu4life/throwaway-email/ci.yml?branch=main&label=CI&color=db2777)](../../actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-1.2.0-db2777.svg)](docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.0-db2777.svg)](docs/CHANGELOG.md)
 [![Cloudflare Workers](https://img.shields.io/badge/Deployed_on-Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-22c55e.svg)]()
 
@@ -61,7 +61,7 @@ Instead of an inbox, point a throwaway address at a real one. Everything sent to
 <details>
 <summary><strong>Web UI</strong></summary>
 
-A fully functional single-page app served from the same Worker — no separate frontend, no framework, just hand-rolled vanilla JS and CSS embedded in `worker.js`. Dark and light themes (follows your OS by default, with a manual toggle persisted in `localStorage`), a live auto-refreshing inbox with countdown, copy-to-clipboard for your address, and one-tap message delete.
+A fully functional single-page app served from the same Worker — no separate frontend, no framework, just hand-rolled vanilla JS and CSS embedded in `worker.js`. Dark and light themes (follows your OS by default, with a manual toggle persisted in `localStorage`), a live auto-refreshing inbox with countdown, copy-to-clipboard for your address, and one-tap message delete. The header links to the source on GitHub and a quick **Report a bug** form, and there's a Buy Me a Coffee support button (the page's only third-party script).
 
 </details>
 

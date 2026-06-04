@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.0] — 2026-06-04
+
+### Added
+- UI — header now has a **View source on GitHub** link and a **Report a bug** link (opens a pre-filled GitHub issue).
+- UI — a **Buy Me a Coffee** support widget (floating button). Note: this loads a third-party script from `cdnjs.buymeacoffee.com` — the page's only external client-side resource.
+
 ## [1.2.0] — 2026-06-04
 
 ### Added
