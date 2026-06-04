@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-db2777.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/shamu4life/throwaway-email/ci.yml?branch=main&label=CI&color=db2777)](../../actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-1.3.0-db2777.svg)](docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.4.0-db2777.svg)](docs/CHANGELOG.md)
 [![Cloudflare Workers](https://img.shields.io/badge/Deployed_on-Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-22c55e.svg)]()
 
@@ -38,7 +38,9 @@ You need an email address for a one-time signup, an OTP code, or a sketchy downl
 
 | Home | Inbox |
 |---|---|
-| ![Home — pick a username and domain, choose inbox or redirect](.github/screenshots/home.png) | ![Inbox — messages land in real time with a live countdown and dark/light theme](.github/screenshots/inbox.png) |
+| <img alt="Home — pick a username and domain, choose inbox or redirect" src=".github/screenshots/home.png#gh-dark-mode-only"><img alt="Home — pick a username and domain, choose inbox or redirect" src=".github/screenshots/home-light.png#gh-light-mode-only"> | <img alt="Inbox — messages land in real time with a live countdown" src=".github/screenshots/inbox.png#gh-dark-mode-only"><img alt="Inbox — messages land in real time with a live countdown" src=".github/screenshots/inbox-light.png#gh-light-mode-only"> |
+
+<sub>Screenshots swap automatically with your GitHub light/dark theme.</sub>
 
 ---
 
@@ -61,7 +63,7 @@ Instead of an inbox, point a throwaway address at a real one. Everything sent to
 <details>
 <summary><strong>Web UI</strong></summary>
 
-A fully functional single-page app served from the same Worker — no separate frontend, no framework, just hand-rolled vanilla JS and CSS embedded in `worker.js`. Dark and light themes (follows your OS by default, with a manual toggle persisted in `localStorage`), a live auto-refreshing inbox with countdown, copy-to-clipboard for your address, and one-tap message delete. The header links to the source on GitHub and a quick **Report a bug** form, and there's a self-hosted Buy Me a Coffee support button — no third-party scripts load on the page.
+A fully functional single-page app served from the same Worker — no separate frontend, no framework, just hand-rolled vanilla JS and CSS embedded in `worker.js`. Dark and light themes (follows your OS by default, with a manual toggle persisted in `localStorage`), a live auto-refreshing inbox with countdown, copy-to-clipboard for your address, and one-tap message delete. The header links to the source on GitHub and a quick **Report a bug** form, and there's a self-hosted Buy Me a Coffee widget (a floating button that expands to a support popover) — built from scratch, so no third-party scripts load on the page.
 
 </details>
 
@@ -143,7 +145,7 @@ throwaway-email/
     ├── social-preview-light.svg # 1280×640 social card (light)
     ├── social-preview.png       # Rasterized 1280×640 card for the GitHub Social Preview upload
     ├── logo.svg                 # Compact wordmark brand asset
-    ├── screenshots/             # home.png, inbox.png — captured by hand from the live UI
+    ├── screenshots/             # home/inbox .png (dark) + -light variants — theme-swapped in the README
     ├── CONTRIBUTING.md          # Setup, deploy, workflow, and conventions
     ├── PULL_REQUEST_TEMPLATE.md
     ├── ISSUE_TEMPLATE/          # Bug report + feature request forms

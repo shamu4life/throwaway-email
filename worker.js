@@ -457,10 +457,18 @@ header{border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;
 .icon-btn:hover{border-color:var(--accent);color:var(--text)}
 .icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .icon-btn svg{width:16px;height:16px;display:block}
-.bmc-btn{position:fixed;right:18px;bottom:18px;z-index:50;display:inline-flex;align-items:center;gap:.4rem;background:#5F7FFF;color:#fff;font-family:inherit;font-size:.9rem;font-weight:700;padding:.6rem .95rem;border-radius:999px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:transform .15s,box-shadow .15s}
-.bmc-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.3)}
-.bmc-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.bmc-btn .bmc-cup{font-size:1.05rem;line-height:1}
+.bmc{position:fixed;right:18px;bottom:18px;z-index:50;display:flex;flex-direction:column;align-items:flex-end;gap:.65rem}
+.bmc-pop{width:248px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.05rem 1.15rem;box-shadow:var(--shadow);transform-origin:bottom right;opacity:0;visibility:hidden;transform:translateY(10px) scale(.96);pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility .18s}
+.bmc.open .bmc-pop{opacity:1;visibility:visible;transform:translateY(0) scale(1);pointer-events:auto}
+.bmc-msg{font-size:.92rem;font-weight:800;color:var(--text);margin:0 0 .25rem}
+.bmc-desc{font-size:.78rem;color:var(--muted);line-height:1.55;margin:0 0 .85rem}
+.bmc-cta{display:flex;align-items:center;justify-content:center;gap:.4rem;background:#5F7FFF;color:#fff;font-weight:700;font-size:.9rem;padding:.55rem .85rem;border-radius:9px;text-decoration:none}
+.bmc-cta:hover{opacity:.9}
+.bmc-cta:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bmc-fab{width:56px;height:56px;border-radius:50%;background:#5F7FFF;color:#fff;border:none;cursor:pointer;font-size:1.6rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);transition:transform .15s,box-shadow .15s}
+.bmc-fab:hover{transform:scale(1.06);box-shadow:0 6px 20px rgba(0,0,0,.36)}
+.bmc-fab:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.bmc-pop,.bmc-fab{transition:none}}
 main{flex:1;padding:2rem 1rem;max-width:620px;margin:0 auto;width:100%}
 h1{font-size:1.6rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-.02em}
 .sub{color:var(--muted);font-size:.875rem;line-height:1.7;margin-bottom:1.75rem}
@@ -550,9 +558,14 @@ footer{border-top:1px solid var(--border);padding:.8rem 1.5rem;text-align:center
 <main id="app" tabindex="-1"></main>
 <div id="announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 <footer>No accounts · No tracking · Inboxes self-destruct after 24h · Zero fucks given</footer>
-<a class="bmc-btn" href="${BMC_URL}" target="_blank" rel="noopener noreferrer" aria-label="Buy me a coffee — support this project">
-  <span class="bmc-cup" aria-hidden="true">☕</span> Buy me a coffee
-</a>
+<div class="bmc" id="bmc">
+  <div class="bmc-pop" id="bmc-pop" role="dialog" aria-label="Support ShitPost.email">
+    <p class="bmc-msg">Thanks for your support! ☕</p>
+    <p class="bmc-desc">If a burner inbox saved your real one, a coffee keeps the lights on.</p>
+    <a class="bmc-cta" href="${BMC_URL}" target="_blank" rel="noopener noreferrer">Buy me a coffee</a>
+  </div>
+  <button class="bmc-fab" id="bmc-fab" type="button" aria-expanded="false" aria-controls="bmc-pop" aria-label="Support this project — buy me a coffee"><span aria-hidden="true">☕</span></button>
+</div>
 <script>
 const DOMAINS      = ${JSON.stringify(ALLOWED_DOMAINS)};
 const INIT_DOMAIN  = ${JSON.stringify(currentDomain)};
@@ -955,6 +968,17 @@ App.home();
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if (!localStorage.getItem('tm-theme')) App.home(); // re-render syncs the button
 });
+
+// Buy Me a Coffee widget (self-hosted — no third-party script). Toggle the popover.
+// Lives outside #app, so App re-renders never touch it; wired once.
+(function(){
+  const wrap = document.getElementById('bmc'), fab = document.getElementById('bmc-fab');
+  if (!wrap || !fab) return;
+  const set = open => { wrap.classList.toggle('open', open); fab.setAttribute('aria-expanded', open ? 'true' : 'false'); };
+  fab.addEventListener('click', e => { e.stopPropagation(); set(!wrap.classList.contains('open')); });
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)) set(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') set(false); });
+})();
 </script>
 </body>
 </html>`;
