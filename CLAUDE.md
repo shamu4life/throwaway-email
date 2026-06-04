@@ -49,7 +49,7 @@ throwaway-email/
 
 | Section | Lines (approx) | What it is |
 |---|---|---|
-| **Config constants** | top | `ALLOWED_DOMAINS`, `INBOX_TTL` (24 h), `REDIRECT_TTL` (30 d), `MAX_MESSAGES` (50), `MAX_EMAIL_BYTES` (5 MB), `FORWARD_FROM`, `REPO_URL`, `BMC_URL` |
+| **Config constants** | top | `ALLOWED_DOMAINS`, `INBOX_TTL` (24 h), `REDIRECT_TTL` (30 d), `MAX_MESSAGES` (50), `MAX_EMAIL_BYTES` (5 MB), `FORWARD_FROM`, `REPO_URL`, `BMC_URL`, `MASCOT` |
 | **Inline MIME parser** | `parseEmail` → `decodeRfc2047` | Dependency-free email parsing: header folding, multipart boundary recursion (depth-capped at 4), base64/quoted-printable decoding, RFC 2047 encoded-word decoding, From-address parsing |
 | **Email event handling** | `handleEmailEvent`, `streamToArrayBuffer`, `forwardDisplayName`, `buildCloudflareMessage`, `buildForwardPayload`, `forwardMessage` | The `email()` handler's core: KV address lookup → re-mail (redirect) or parse-and-store (inbox); streams raw MIME with a hard 5 MB cap. `forwardMessage` sends via Cloudflare Email Service then falls back to Resend; `buildCloudflareMessage` / `buildForwardPayload` are pure, unit-tested builders for each provider's send shape |
 | **API handlers** | `handleAPI`, `handleCreate`, `handleGetInbox`, `handleDeleteInbox` | The JSON HTTP API behind `/api/*` |
@@ -235,6 +235,7 @@ Defined at the top of `worker.js`. Changing any of these is a user-visible behav
 | `FORWARD_FROM` | `'forward@shitpost.email'` | The `From` address redirected mail is re-sent from. Must be a domain verified for sending in Cloudflare Email Service (and in Resend, if the fallback is configured). |
 | `REPO_URL` | GitHub repo URL | Target for the header "View source" link and the "Report a bug" link (`+ /issues/new?template=bug_report.yml`). |
 | `BMC_URL` | Buy Me a Coffee URL | Target for the self-hosted floating "Buy me a coffee" button. |
+| `MASCOT` | base64 PNG data URI | The mascot image, inlined. Used for both the favicon (`<link rel="icon">`) and the header logo (`<img class="logo-mascot">`) — no external image request. Swap this one constant to change the mascot everywhere. |
 
 ### Bindings & Secrets
 
