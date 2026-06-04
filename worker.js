@@ -462,10 +462,10 @@ header{border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;
 .bmc.open .bmc-pop{opacity:1;visibility:visible;transform:translateY(0) scale(1);pointer-events:auto}
 .bmc-msg{font-size:.92rem;font-weight:800;color:var(--text);margin:0 0 .25rem}
 .bmc-desc{font-size:.78rem;color:var(--muted);line-height:1.55;margin:0 0 .85rem}
-.bmc-cta{display:flex;align-items:center;justify-content:center;gap:.4rem;background:#5F7FFF;color:#fff;font-weight:700;font-size:.9rem;padding:.55rem .85rem;border-radius:9px;text-decoration:none}
+.bmc-cta{display:flex;align-items:center;justify-content:center;gap:.4rem;background:var(--accent);color:#fff;font-weight:700;font-size:.9rem;padding:.55rem .85rem;border-radius:9px;text-decoration:none}
 .bmc-cta:hover{opacity:.9}
 .bmc-cta:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.bmc-fab{width:56px;height:56px;border-radius:50%;background:#5F7FFF;color:#fff;border:none;cursor:pointer;font-size:1.6rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);transition:transform .15s,box-shadow .15s}
+.bmc-fab{width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:1.6rem;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);transition:transform .15s,box-shadow .15s}
 .bmc-fab:hover{transform:scale(1.06);box-shadow:0 6px 20px rgba(0,0,0,.36)}
 .bmc-fab:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 @media (prefers-reduced-motion:reduce){.bmc-pop,.bmc-fab{transition:none}}
@@ -564,7 +564,7 @@ footer{border-top:1px solid var(--border);padding:.8rem 1.5rem;text-align:center
     <p class="bmc-desc">If a burner inbox saved your real one, a coffee keeps the lights on.</p>
     <a class="bmc-cta" href="${BMC_URL}" target="_blank" rel="noopener noreferrer">Buy me a coffee</a>
   </div>
-  <button class="bmc-fab" id="bmc-fab" type="button" aria-expanded="false" aria-controls="bmc-pop" aria-label="Support this project — buy me a coffee"><span aria-hidden="true">☕</span></button>
+  <button class="bmc-fab" id="bmc-fab" type="button" aria-expanded="false" aria-controls="bmc-pop" aria-label="Support this project — buy me a coffee"><span aria-hidden="true">💩</span></button>
 </div>
 <script>
 const DOMAINS      = ${JSON.stringify(ALLOWED_DOMAINS)};
