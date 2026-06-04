@@ -61,16 +61,16 @@ To stand up your own throwaway-mail domain you need a Cloudflare account with at
 
 3. **Configure Cloudflare Email Routing** on each domain (Cloudflare dashboard → your domain → Email → Email Routing). Add a **catch-all** rule that sends to this Worker so every inbound message invokes the `email()` handler. Without this, inboxes and redirects receive nothing.
 
-4. **Set up Resend for redirects** (skip if you only want inboxes). Redirects re-mail through [Resend](https://resend.com) so they reach any address without the recipient verifying anything — Cloudflare's native `forward()` only delivers to pre-verified destinations, which is useless for a public service.
+4. **Set up sending for redirects** (skip if you only want inboxes). Redirects re-mail the message so they reach any address without the recipient verifying anything — Cloudflare's native `forward()` only delivers to pre-verified destinations, which is useless for a public service. The Worker tries **Cloudflare Email Service** first, then falls back to **Resend**.
 
-   1. Create a free Resend account and **add + verify a sending domain** (Resend shows the SPF/DKIM/DMARC DNS records — add them in your Cloudflare DNS dashboard). Verify the domain used in `FORWARD_FROM` at the top of `worker.js` (default `forward@shitpost.email`; change it to your own domain).
-   2. Create a Resend **API key** and store it as a Worker secret — never in `wrangler.toml` or `worker.js`:
+   1. **Cloudflare Email Service (primary).** Onboard a sending domain in the dashboard (**Email → Email Service → Email Sending**); Cloudflare adds the SPF/DKIM/DMARC records automatically since your domains are on Cloudflare DNS. Verify the domain used in `FORWARD_FROM` at the top of `worker.js` (default `forward@shitpost.email`; change it to your own). The `[[send_email]]` binding named `EMAIL` is already declared in `wrangler.toml`. **Sending to arbitrary recipients requires the Workers Paid plan** (the free plan can only send to verified addresses); ~3,000 emails/month are included, then $0.35/1,000.
+   2. **Resend (optional fallback).** Create a Resend account, add + verify the same sending domain, create an **API key**, and store it as a Worker secret — never in `wrangler.toml` or `worker.js`:
 
       ```bash
       npx wrangler secret put RESEND_API_KEY
       ```
 
-   Without this secret, redirects bounce (`Forwarding failed`); inboxes still work. Note attachments are not forwarded, and the free Resend tier caps sending at ~100/day.
+   If **neither** provider is configured/working, redirects bounce (`Forwarding failed`); inboxes still work regardless. Note attachments are not forwarded.
 
 5. **Deploy:**
 
@@ -78,7 +78,7 @@ To stand up your own throwaway-mail domain you need a Cloudflare account with at
    npm run deploy
    ```
 
-Cloudflare credentials are managed via `wrangler login`. The only secret is `RESEND_API_KEY` (above), set via `wrangler secret put` — there is no `.env` file in source.
+Cloudflare credentials are managed via `wrangler login`. The only secret is the optional `RESEND_API_KEY` fallback (above), set via `wrangler secret put` — there is no `.env` file in source.
 
 ---
 

@@ -17,12 +17,14 @@
 //
 // Cloudflare bindings + secrets (see wrangler.toml / `wrangler secret put`):
 //   env.KV               — KV namespace; the only persistence layer.
-//   env.RESEND_API_KEY   — secret; Resend API key used to re-send (forward)
-//                          redirect mail. Set via `wrangler secret put RESEND_API_KEY`.
-// Redirects re-mail the message through Resend's HTTP API (from FORWARD_FROM,
-// with the original sender in Reply-To) so they reach ANY address — Cloudflare's
-// native forward() only delivers to pre-verified destinations. Attachments are
-// not re-sent (the inline parser extracts text/HTML only).
+//   env.EMAIL            — send_email binding (Cloudflare Email Service); primary
+//                          path for re-sending redirect mail.
+//   env.RESEND_API_KEY   — secret; Resend API key, used as the fallback sender if
+//                          env.EMAIL.send() fails. Set via `wrangler secret put`.
+// Redirects re-mail the message (from FORWARD_FROM, original sender in Reply-To)
+// so they reach ANY address — Cloudflare's native forward() only delivers to
+// pre-verified destinations. Sending tries Cloudflare Email Service first, then
+// Resend. Attachments are not re-sent (the inline parser extracts text/HTML only).
 //
 // KV key schema:
 //   addr:<email>  → { type:'inbox'|'redirect', target?, token?, created, expires }
@@ -42,7 +44,7 @@ const INBOX_TTL       = 86400;           // 24 hours
 const REDIRECT_TTL    = 2592000;         // 30 days
 const MAX_MESSAGES    = 50;
 const MAX_EMAIL_BYTES = 5 * 1024 * 1024; // 5 MB
-const FORWARD_FROM    = 'forward@shitpost.email'; // "from" address for redirected mail (must be a Resend-verified sending domain)
+const FORWARD_FROM    = 'forward@shitpost.email'; // "from" address for redirected mail (must be a verified sending domain in Cloudflare Email Service / Resend)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline MIME parser
@@ -172,7 +174,7 @@ async function handleEmailEvent(message, env) {
       throw err;
     }
     const parsed = parseEmail(rawBuffer);
-    const ok = await forwardViaResend(env, record.target, parsed);
+    const ok = await forwardMessage(env, record.target, parsed);
     // Reject so the sender gets a bounce rather than a silent black hole.
     if (!ok) message.setReject('Forwarding failed — try again later');
     return;
@@ -218,15 +220,34 @@ async function streamToArrayBuffer(stream, maxBytes) {
   return out.buffer;
 }
 
-// Build the Resend send payload for a redirected message. Pure + total — no I/O,
-// never throws — so it can be unit-tested. The message is re-mailed FROM our
-// verified sender (display name carries the original sender, header-breaking
-// characters stripped) with the real sender in Reply-To so replies still work.
-function buildForwardPayload(parsed, to, from) {
-  const name = (parsed.fromName || parsed.from || 'Unknown sender')
+// Display name for a forwarded message: the original sender, with header-breaking
+// characters stripped and length-capped. Pure helper shared by both builders.
+function forwardDisplayName(parsed) {
+  return (parsed.fromName || parsed.from || 'Unknown sender')
     .replace(/[\r\n"\\<>]/g, '').trim().slice(0, 100) || 'Unknown sender';
+}
+
+// Build the Cloudflare Email Service send() message for a redirected message.
+// Pure + total — no I/O, never throws — so it can be unit-tested. Re-mailed FROM
+// our verified sender (display name carries the original sender) with the real
+// sender in replyTo so replies still work.
+function buildCloudflareMessage(parsed, to, from) {
+  const msg = {
+    from: { email: from, name: `${forwardDisplayName(parsed)} via ShitPost` },
+    to,
+    subject: parsed.subject || '(no subject)',
+  };
+  if (parsed.from) msg.replyTo = parsed.from;
+  if (parsed.html) msg.html = parsed.html;
+  if (parsed.text || !parsed.html) msg.text = parsed.text || '(empty message)';
+  return msg;
+}
+
+// Build the Resend HTTP API payload (the fallback provider). Same content, that
+// provider's field names (snake_case reply_to, From as an RFC display string).
+function buildForwardPayload(parsed, to, from) {
   const payload = {
-    from: `"${name} via ShitPost" <${from}>`,
+    from: `"${forwardDisplayName(parsed)} via ShitPost" <${from}>`,
     to: [to],
     subject: parsed.subject || '(no subject)',
   };
@@ -236,32 +257,42 @@ function buildForwardPayload(parsed, to, from) {
   return payload;
 }
 
-// Re-send a parsed message to the redirect target via Resend's HTTP API.
-// Returns true on success; false (with a structured log) on any failure so the
-// caller can bounce the original message. Attachments are not forwarded.
-async function forwardViaResend(env, to, parsed) {
-  if (!env.RESEND_API_KEY) {
-    console.error(JSON.stringify({ event: 'forward_no_key', to }));
-    return false;
-  }
-  try {
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(buildForwardPayload(parsed, to, FORWARD_FROM)),
-    });
-    if (!r.ok) {
-      console.error(JSON.stringify({ event: 'forward_send_failed', status: r.status, detail: (await r.text()).slice(0, 300) }));
-      return false;
+// Re-send a parsed message to the redirect target. Tries Cloudflare Email Service
+// (native binding) first, falls back to Resend's HTTP API. Returns true on the
+// first success; false (with a structured log) only if every available provider
+// fails, so the caller can bounce the original. Attachments are not forwarded.
+async function forwardMessage(env, to, parsed) {
+  // Primary: Cloudflare Email Service via the send_email binding.
+  if (env.EMAIL) {
+    try {
+      await env.EMAIL.send(buildCloudflareMessage(parsed, to, FORWARD_FROM));
+      return true;
+    } catch (err) {
+      console.error(JSON.stringify({ event: 'forward_cf_failed', code: err && err.code, message: err && err.message }));
+      // fall through to Resend
     }
-    return true;
-  } catch (err) {
-    console.error(JSON.stringify({ event: 'forward_send_error', message: err && err.message }));
-    return false;
   }
+  // Fallback: Resend HTTP API.
+  if (env.RESEND_API_KEY) {
+    try {
+      const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(buildForwardPayload(parsed, to, FORWARD_FROM)),
+      });
+      if (r.ok) return true;
+      console.error(JSON.stringify({ event: 'forward_resend_failed', status: r.status, detail: (await r.text()).slice(0, 300) }));
+    } catch (err) {
+      console.error(JSON.stringify({ event: 'forward_resend_error', message: err && err.message }));
+    }
+  }
+  if (!env.EMAIL && !env.RESEND_API_KEY) {
+    console.error(JSON.stringify({ event: 'forward_no_provider', to }));
+  }
+  return false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -973,4 +1004,4 @@ export default {
 // handlers; these extra named exports are inert in the Worker runtime and keep
 // the file paste-able into the dashboard editor.
 // ─────────────────────────────────────────────────────────────────────────────
-export { parseEmail, parseHeaders, extractBoundary, extractParts, decodePart, parseAddress, decodeRfc2047, buildForwardPayload };
+export { parseEmail, parseHeaders, extractBoundary, extractParts, decodePart, parseAddress, decodeRfc2047, buildForwardPayload, buildCloudflareMessage };

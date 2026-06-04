@@ -11,6 +11,11 @@ id      = "39574b78356244e2a1db30eb487d2c78"
 pattern   = "shitpost.email/*"
 zone_name = "shitpost.email"
 
+# Cloudflare Email Service sending binding — env.EMAIL.send() re-mails redirect
+# mail (primary path; Resend is the fallback via the RESEND_API_KEY secret).
+[[send_email]]
+name = "EMAIL"
+
 # Workers logs + traces. head_sampling_rate = 1 keeps every invocation while
 # volume is low; lower it if request volume grows.
 [observability]

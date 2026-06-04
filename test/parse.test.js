@@ -20,6 +20,7 @@ import {
   parseAddress,
   decodeRfc2047,
   buildForwardPayload,
+  buildCloudflareMessage,
 } from '../worker.js';
 
 const enc = (s) => new TextEncoder().encode(s).buffer;
@@ -121,4 +122,25 @@ test('buildForwardPayload strips header-breaking chars, falls back on empty fiel
   assert.equal(p.reply_to, undefined);        // no sender → no reply_to
   assert.equal(p.html, '<p>hi</p>');
   assert.equal(p.text, undefined);            // html present, no text → text omitted
+});
+
+test('buildCloudflareMessage uses send() shape: object from, string to, camelCase replyTo', () => {
+  const parsed = { subject: 'Hi', from: 'alice@example.com', fromName: 'Alice', text: 'hello', html: '' };
+  const m = buildCloudflareMessage(parsed, 'bob@gmail.com', 'forward@shitpost.email');
+  assert.deepEqual(m.from, { email: 'forward@shitpost.email', name: 'Alice via ShitPost' });
+  assert.equal(m.to, 'bob@gmail.com');        // plain string, not an array
+  assert.equal(m.replyTo, 'alice@example.com'); // camelCase per Cloudflare send()
+  assert.equal(m.subject, 'Hi');
+  assert.equal(m.text, 'hello');
+  assert.equal(m.html, undefined);
+});
+
+test('buildCloudflareMessage strips name chars and fills empty subject/sender', () => {
+  const parsed = { subject: '', from: '', fromName: 'Ev"il<>\r\nName', text: '', html: '<p>hi</p>' };
+  const m = buildCloudflareMessage(parsed, 'r@z.com', 'forward@shitpost.email');
+  assert.equal(m.from.name, 'EvilName via ShitPost');
+  assert.equal(m.subject, '(no subject)');
+  assert.equal(m.replyTo, undefined);         // no sender → no replyTo
+  assert.equal(m.html, '<p>hi</p>');
+  assert.equal(m.text, undefined);
 });
