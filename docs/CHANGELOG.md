@@ -8,7 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.4.0] — 2026-06-04
 
 ### Changed
-- UI — the Buy Me a Coffee button is now a floating **widget**: a circular, on-brand 💩 button (in the site's accent pink) that expands into a support popover (message + CTA). It's a self-hosted recreation of the widget experience — still no third-party scripts or external assets load on the page.
+- UI — the Buy Me a Coffee button is now a floating **widget**: a circular, on-brand button (a custom money-mouth 💩 icon on the site's accent pink) that expands into a support popover (message + CTA). It's a self-hosted recreation of the widget experience — still no third-party scripts or external assets load on the page.
 
 ### Added
 - Docs — README screenshots now ship in **light and dark variants** that swap automatically with your GitHub theme.

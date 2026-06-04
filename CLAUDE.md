@@ -289,7 +289,7 @@ Stored message bodies are clamped: `text` to 10 000 chars, `html` to 50 000 char
 - **Inbox polling:** auto-refreshes every `REFRESH_SECS` (30 s) with a visible countdown.
 - **Session token:** the inbox token is held **in memory only** (module-scoped `_inbox`), never persisted. Closing the tab discards it — by design.
 - **Header links:** two `.icon-btn` anchors — "View source on GitHub" (`REPO_URL`) and "Report a bug" (`REPO_URL` + `/issues/new?template=bug_report.yml`) — sit next to the theme toggle.
-- **Buy Me a Coffee widget:** a self-hosted recreation of the BMC floating-widget UX — a circular `.bmc-fab` button that toggles a `.bmc-pop` popover (message + CTA to `BMC_URL`), wired by a tiny IIFE at the end of the script (click / click-outside / Esc; respects `prefers-reduced-motion`). **Not** the third-party BMC widget script — it's plain HTML/CSS/JS, so the page loads **no** external client-side resources.
+- **Buy Me a Coffee widget:** a self-hosted recreation of the BMC floating-widget UX — a circular accent-pink `.bmc-fab` button (icon is an **inlined base64 PNG data URI**, like the favicon — no external image request) that toggles a `.bmc-pop` popover (message + CTA to `BMC_URL`), wired by a tiny IIFE at the end of the script (click / click-outside / Esc; respects `prefers-reduced-motion`). **Not** the third-party BMC widget script — it's plain HTML/CSS/JS, so the page loads **no** external client-side resources. To change the icon, swap the data URI in the `.bmc-fab` `<img>`.
 - `buildHTML(currentDomain)` interpolates the current request's domain (so the displayed default matches the host) and the full `ALLOWED_DOMAINS` list into the dropdown.
 
 ---
