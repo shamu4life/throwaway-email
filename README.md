@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-db2777.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/shamu4life/throwaway-email/ci.yml?branch=main&label=CI&color=db2777)](../../actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-1.0.0-db2777.svg)](docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.1-db2777.svg)](docs/CHANGELOG.md)
 [![Cloudflare Workers](https://img.shields.io/badge/Deployed_on-Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-22c55e.svg)]()
 
@@ -130,7 +130,7 @@ Both keys carry a KV `expirationTtl`, so expiry is enforced by KV itself — the
 ```
 throwaway-email/
 ├── worker.js               # The entire app: MIME parser, email handler, JSON API, and embedded SPA
-├── wrangler.toml           # Cloudflare Workers config: KV binding, routes, email binding
+├── wrangler.toml           # Cloudflare Workers config: KV binding, routes, observability
 ├── package.json            # Version source of truth; dev/deploy/test scripts (Wrangler + Node test runner)
 ├── test/
 │   └── parse.test.js       # Unit tests for the MIME parser (node:test, zero deps)

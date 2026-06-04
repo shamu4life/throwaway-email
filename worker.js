@@ -17,7 +17,8 @@
 //
 // Cloudflare bindings (see wrangler.toml):
 //   env.KV               — KV namespace; the only persistence layer.
-//   [[send_email]]       — used by message.forward() for redirects.
+// Redirects use message.forward() from the inbound email() event, which needs
+// no send_email binding (that is only for the outbound EmailMessage send API).
 //
 // KV key schema:
 //   addr:<email>  → { type:'inbox'|'redirect', target?, token?, created, expires }
@@ -254,7 +255,7 @@ async function handleGetInbox(request, env, url) {
   if (!email || !token) return json({ error: 'Missing email or token' }, 400);
   const record = await env.KV.get(`addr:${email}`, 'json');
   if (!record || record.type !== 'inbox') return json({ error: 'Inbox not found' }, 404);
-  if (record.token !== token)             return json({ error: 'Unauthorized' }, 401);
+  if (!safeEqual(record.token, token))    return json({ error: 'Unauthorized' }, 401);
   const messages = (await env.KV.get(`msgs:${email}`, 'json')) || [];
   return json({ email, messages, expires: record.expires, count: messages.length });
 }
@@ -264,7 +265,7 @@ async function handleDeleteInbox(request, env, url) {
   const token = url.searchParams.get('token');
   if (!email || !token) return json({ error: 'Missing params' }, 400);
   const record = await env.KV.get(`addr:${email}`, 'json');
-  if (!record || record.token !== token) return json({ error: 'Unauthorized' }, 401);
+  if (!record || !safeEqual(record.token, token)) return json({ error: 'Unauthorized' }, 401);
   await env.KV.delete(`addr:${email}`);
   await env.KV.delete(`msgs:${email}`);
   return json({ deleted: true });
@@ -848,6 +849,16 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 // Helpers + entry point
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Constant-time token comparison — avoids leaking the token via response
+// timing. Lengths are compared first (timingSafeEqual throws on a mismatch);
+// our tokens are fixed-length, so this reveals nothing useful.
+function safeEqual(a, b) {
+  const ea = new TextEncoder().encode(String(a ?? ''));
+  const eb = new TextEncoder().encode(String(b ?? ''));
+  if (ea.byteLength !== eb.byteLength) return false;
+  return crypto.subtle.timingSafeEqual(ea, eb);
+}
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -859,16 +870,23 @@ export default {
   // HTTP entry point: serves the SPA on every non-API route, dispatches /api/*
   // to the JSON API, and answers CORS preflight (OPTIONS) requests.
   async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: {
-        'Access-Control-Allow-Origin':  '*',
-        'Access-Control-Allow-Methods': 'GET,POST,DELETE',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      }});
+    try {
+      const url = new URL(request.url);
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { headers: {
+          'Access-Control-Allow-Origin':  '*',
+          'Access-Control-Allow-Methods': 'GET,POST,DELETE',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        }});
+      }
+      if (url.pathname.startsWith('/api/')) return handleAPI(request, env, url);
+      return serveUI(request);
+    } catch (err) {
+      // Structured log so it is queryable once observability is enabled, and a
+      // JSON 500 the UI's fetch wrapper can surface instead of a raw error page.
+      console.error(JSON.stringify({ event: 'fetch_error', message: err && err.message, stack: err && err.stack }));
+      return json({ error: 'Internal server error' }, 500);
     }
-    if (url.pathname.startsWith('/api/')) return handleAPI(request, env, url);
-    return serveUI(request);
   },
 
   // Inbound-mail entry point: Cloudflare Email Routing invokes this per message.
@@ -879,7 +897,7 @@ export default {
     try {
       await handleEmailEvent(message, env);
     } catch (err) {
-      console.error('Email handler error:', err);
+      console.error(JSON.stringify({ event: 'email_handler_error', message: err && err.message, stack: err && err.stack }));
       message.setReject('Internal error');
     }
   },

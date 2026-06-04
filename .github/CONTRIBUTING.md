@@ -61,7 +61,7 @@ To stand up your own throwaway-mail domain you need a Cloudflare account with at
 
 3. **Configure Cloudflare Email Routing** on each domain (Cloudflare dashboard → your domain → Email → Email Routing). Add a **catch-all** rule that sends to this Worker so every inbound message invokes the `email()` handler. Without this, inboxes and redirects receive nothing.
 
-4. **Email-sending binding.** `wrangler.toml` declares a `[[send_email]]` binding used to forward redirect mail. Make sure it's allowed for the addresses you forward to (Cloudflare requires verified destination addresses for Email Routing forwarding).
+4. **Verified destinations for redirects.** Redirects use `message.forward()` from the inbound `email()` event — no `[[send_email]]` binding is required. Cloudflare only forwards to **verified destination addresses**, so add and verify each redirect target in Email Routing (Cloudflare dashboard → your domain → Email → Email Routing → Destination addresses) before forwarding to it.
 
 5. **Deploy:**
 
