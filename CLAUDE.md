@@ -7,7 +7,7 @@ ShitPost.email (repo: `throwaway-email`) is a disposable email service built as 
 **Stack:** Cloudflare Workers + Cloudflare KV + Cloudflare Email Routing
 **UI:** Hand-rolled vanilla JS + CSS, embedded as a template string in `worker.js` (no framework, no bundler)
 **Deploy:** `wrangler deploy`
-**Version:** 1.3.0
+**Version:** 1.4.0
 
 The single most important constraint: **everything stays in `worker.js`, dependency-free, paste-able straight into the Cloudflare dashboard editor.** Do not introduce a bundler, a framework, an npm runtime dependency, or a second source file without explicit agreement.
 
@@ -49,7 +49,7 @@ throwaway-email/
 
 | Section | Lines (approx) | What it is |
 |---|---|---|
-| **Config constants** | top | `ALLOWED_DOMAINS`, `INBOX_TTL` (24 h), `REDIRECT_TTL` (30 d), `MAX_MESSAGES` (50), `MAX_EMAIL_BYTES` (5 MB), `FORWARD_FROM`, `REPO_URL`, `BMC_URL` |
+| **Config constants** | top | `ALLOWED_DOMAINS`, `INBOX_TTL` (24 h), `REDIRECT_TTL` (30 d), `MAX_MESSAGES` (50), `MAX_EMAIL_BYTES` (5 MB), `FORWARD_FROM`, `REPO_URL`, `BMC_URL`, `MASCOT` |
 | **Inline MIME parser** | `parseEmail` → `decodeRfc2047` | Dependency-free email parsing: header folding, multipart boundary recursion (depth-capped at 4), base64/quoted-printable decoding, RFC 2047 encoded-word decoding, From-address parsing |
 | **Email event handling** | `handleEmailEvent`, `streamToArrayBuffer`, `forwardDisplayName`, `buildCloudflareMessage`, `buildForwardPayload`, `forwardMessage` | The `email()` handler's core: KV address lookup → re-mail (redirect) or parse-and-store (inbox); streams raw MIME with a hard 5 MB cap. `forwardMessage` sends via Cloudflare Email Service then falls back to Resend; `buildCloudflareMessage` / `buildForwardPayload` are pure, unit-tested builders for each provider's send shape |
 | **API handlers** | `handleAPI`, `handleCreate`, `handleGetInbox`, `handleDeleteInbox` | The JSON HTTP API behind `/api/*` |
@@ -186,7 +186,9 @@ Every PR that changes code must update relevant documentation in the **same comm
 
 ### Screenshots
 
-`home.png` and `inbox.png` in `.github/screenshots/` are **captured by hand** from the live UI (there is no automated screenshot script). Recapture both when the home or inbox view changes visually — layout, controls, colors, or copy. Capture in **dark theme** (the default) at a typical desktop width to match the existing shots. Do not hand-edit the PNGs.
+`.github/screenshots/` holds four shots: `home.png` / `inbox.png` (dark) and `home-light.png` / `inbox-light.png` (light). The README pairs them with `#gh-dark-mode-only` / `#gh-light-mode-only` so they swap with the reader's GitHub theme. Recapture **all four** when the home or inbox view changes visually — layout, controls, colors, or copy.
+
+Capture at **1280×800** to match the existing shots. There's no committed script, but they regenerate cleanly by driving the local UI with a headless browser — run `wrangler dev`, then a one-off `puppeteer-core` (system Chrome via `executablePath`) script: set `page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' | 'light' }])` for each theme, screenshot the home view, then create an inbox and intercept `GET /api/inbox` with sample messages for the inbox view (the `email()` handler can't run locally). Do not hand-edit the PNGs.
 
 ### Social preview card
 
@@ -233,6 +235,7 @@ Defined at the top of `worker.js`. Changing any of these is a user-visible behav
 | `FORWARD_FROM` | `'forward@shitpost.email'` | The `From` address redirected mail is re-sent from. Must be a domain verified for sending in Cloudflare Email Service (and in Resend, if the fallback is configured). |
 | `REPO_URL` | GitHub repo URL | Target for the header "View source" link and the "Report a bug" link (`+ /issues/new?template=bug_report.yml`). |
 | `BMC_URL` | Buy Me a Coffee URL | Target for the self-hosted floating "Buy me a coffee" button. |
+| `MASCOT` | base64 PNG data URI | The mascot image, inlined. Used for both the favicon (`<link rel="icon">`) and the header logo (`<img class="logo-mascot">`) — no external image request. Swap this one constant to change the mascot everywhere. |
 
 ### Bindings & Secrets
 
@@ -287,14 +290,14 @@ Stored message bodies are clamped: `text` to 10 000 chars, `html` to 50 000 char
 - **Inbox polling:** auto-refreshes every `REFRESH_SECS` (30 s) with a visible countdown.
 - **Session token:** the inbox token is held **in memory only** (module-scoped `_inbox`), never persisted. Closing the tab discards it — by design.
 - **Header links:** two `.icon-btn` anchors — "View source on GitHub" (`REPO_URL`) and "Report a bug" (`REPO_URL` + `/issues/new?template=bug_report.yml`) — sit next to the theme toggle.
-- **Buy Me a Coffee button:** a self-hosted floating `.bmc-btn` anchor (fixed bottom-right, BMC brand color `#5F7FFF`, ☕ glyph) links to `BMC_URL`. **Not** the third-party BMC widget script — it's plain HTML/CSS, so the page loads **no** external client-side resources.
+- **Buy Me a Coffee widget:** a self-hosted recreation of the BMC floating-widget UX — a circular accent-pink `.bmc-fab` button (icon is an **inlined base64 PNG data URI**, like the favicon — no external image request) that toggles a `.bmc-pop` popover (message + CTA to `BMC_URL`), wired by a tiny IIFE at the end of the script (click / click-outside / Esc; respects `prefers-reduced-motion`). **Not** the third-party BMC widget script — it's plain HTML/CSS/JS, so the page loads **no** external client-side resources. To change the icon, swap the data URI in the `.bmc-fab` `<img>`.
 - `buildHTML(currentDomain)` interpolates the current request's domain (so the displayed default matches the host) and the full `ALLOWED_DOMAINS` list into the dropdown.
 
 ---
 
 ## Conventions
 
-- **Single file, zero dependencies.** All production code stays in `worker.js`. Do not add an npm runtime dependency, a bundler, a framework, or a second source file. Wrangler (dev/deploy only) is the sole devDependency. The served page loads **no third-party client-side scripts or assets** either (the "Buy me a coffee" button is a self-hosted `<a>`, not the BMC widget) — keep it that way.
+- **Single file, zero dependencies.** All production code stays in `worker.js`. Do not add an npm runtime dependency, a bundler, a framework, or a second source file. Wrangler (dev/deploy only) is the sole devDependency. The served page loads **no third-party client-side scripts or assets** either (the "Buy me a coffee" floating widget is a self-hosted recreation, not the BMC widget script) — keep it that way.
 - **Paste-ability.** `worker.js` must remain valid to paste directly into the Cloudflare dashboard editor. No imports of local modules, no build-time transforms.
 - **Section discipline.** Keep new code under the matching banner comment (Config / MIME parser / Email / API / UI / Helpers / Exports).
 - **CORS stays open.** The API is intentionally `Access-Control-Allow-Origin: *`. Don't tighten it without a reason — the UI and any third-party caller depend on it.
