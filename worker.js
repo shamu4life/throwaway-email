@@ -39,7 +39,7 @@
 // Full architecture notes live in CLAUDE.md.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ALLOWED_DOMAINS = ['shitpost.email', 'letsfuckingpiss.party', 'megapenispoopenfarten.sex'];
+const ALLOWED_DOMAINS = ['shitpost.email', 'letsfuckingpiss.party', 'megapenispoopenfarten.sex', 'sorryifuckedyour.mom', 'hotsinglesnear.you'];
 const INBOX_TTL       = 86400;           // 24 hours
 const REDIRECT_TTL    = 2592000;         // 30 days
 const MAX_MESSAGES    = 50;

@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.0] — 2026-10-11
+
+### Added
+- Email — two new domains: **sorryifuckedyour.mom** and **hotsinglesnear.you**. Pick either from the domain dropdown for an inbox or a redirect. Their websites stay what they were; only the mail side is ours.
+
 ## [1.4.0] — 2026-06-04
 
 ### Changed

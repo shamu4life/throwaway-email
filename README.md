@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-db2777.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/shamu4life/throwaway-email/ci.yml?branch=main&label=CI&color=db2777)](../../actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-1.4.0-db2777.svg)](docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.5.0-db2777.svg)](docs/CHANGELOG.md)
 [![Cloudflare Workers](https://img.shields.io/badge/Deployed_on-Cloudflare_Workers-f38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-22c55e.svg)]()
 

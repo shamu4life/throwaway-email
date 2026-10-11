@@ -7,7 +7,7 @@ ShitPost.email (repo: `throwaway-email`) is a disposable email service built as 
 **Stack:** Cloudflare Workers + Cloudflare KV + Cloudflare Email Routing
 **UI:** Hand-rolled vanilla JS + CSS, embedded as a template string in `worker.js` (no framework, no bundler)
 **Deploy:** `wrangler deploy`
-**Version:** 1.4.0
+**Version:** 1.5.0
 
 The single most important constraint: **everything stays in `worker.js`, dependency-free, paste-able straight into the Cloudflare dashboard editor.** Do not introduce a bundler, a framework, an npm runtime dependency, or a second source file without explicit agreement.
 
